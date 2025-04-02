@@ -7,54 +7,24 @@ body {
   color: var(--texto);
   transition: 0.3s;
 }
-
 :root {
   --fondo: #f9f9f9;
   --texto: #000;
+  --color-peso: #2196f3;
+  --color-cintura: #4caf50;
+  --color-pecho: #e91e63;
+  --color-cadera: #ff9800;
+  --color-muslo: #9c27b0;
+  --color-brazo: #795548;
 }
-
 body.oscuro {
   --fondo: #121212;
   --texto: #fff;
 }
-
-h1, h2 {
-  text-align: center;
-}
-
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5em;
-  margin-bottom: 1em;
-}
-
-input, button, select {
+input, select, button {
+  margin-bottom: 0.5em;
   padding: 0.5em;
-  font-size: 1em;
 }
-
-ul {
-  list-style: none;
-  padding: 0;
-}
-
-ul li button {
-  background: transparent;
-  border: none;
-  color: red;
-  font-size: 1.2em;
-  cursor: pointer;
-}
-
-#controles {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 1em;
-  margin-bottom: 1em;
-}
-
 canvas {
   max-width: 100%;
 }

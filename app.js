@@ -1,16 +1,21 @@
 const form = document.getElementById('form');
 const pesoInput = document.getElementById('peso');
-const notaInput = document.getElementById('nota');
 const fechaInput = document.getElementById('fecha');
+const notaInput = document.getElementById('nota');
+const cinturaInput = document.getElementById('cintura');
+const pechoInput = document.getElementById('pecho');
+const caderaInput = document.getElementById('cadera');
+const musloInput = document.getElementById('muslo');
+const brazoInput = document.getElementById('brazo');
 const historial = document.getElementById('historial');
 const objetivoInput = document.getElementById('objetivo');
 const resumen = document.getElementById('resumen');
+const medidaSeleccion = document.getElementById('medidaSeleccion');
 
 let chart;
 let periodoActual = new Date();
 let vista = 'mes';
 
-// Guardar y cargar tema
 document.getElementById('tema').addEventListener('click', () => {
   document.body.classList.toggle('oscuro');
   localStorage.setItem('tema', document.body.classList.contains('oscuro') ? 'oscuro' : 'claro');
@@ -19,7 +24,6 @@ if (localStorage.getItem('tema') === 'oscuro') {
   document.body.classList.add('oscuro');
 }
 
-// Cargar objetivo
 objetivoInput.value = localStorage.getItem('objetivo') || '';
 objetivoInput.addEventListener('change', () => {
   localStorage.setItem('objetivo', objetivoInput.value);
@@ -31,10 +35,12 @@ function cargarHistorial() {
   const datos = JSON.parse(localStorage.getItem('pesos')) || [];
 
   datos.forEach((registro, index) => {
-    const li = document.createElement('li');
     const f = new Date(registro.fecha);
     const fechaLocal = f.toLocaleDateString();
-    li.textContent = `${fechaLocal}: ${registro.peso} kg${registro.nota ? ' - ' + registro.nota : ''}`;
+    const medidas = registro.medidas || {};
+    const medidasTexto = Object.entries(medidas).filter(([_, val]) => val).map(([k, v]) => `${k}: ${v} cm`).join(', ');
+    const li = document.createElement('li');
+    li.textContent = `${fechaLocal}: ${registro.peso} kg${registro.nota ? ' - ' + registro.nota : ''}${medidasTexto ? ' | ' + medidasTexto : ''}`;
 
     const btn = document.createElement('button');
     btn.textContent = '❌';
@@ -64,7 +70,17 @@ form.addEventListener('submit', e => {
     const f = new Date(fecha);
     fecha = f.toISOString().split('T')[0];
   }
-  const nuevoRegistro = { fecha, peso, nota };
+
+  const nuevoRegistro = {
+    fecha, peso, nota,
+    medidas: {
+      cintura: cinturaInput.value,
+      pecho: pechoInput.value,
+      cadera: caderaInput.value,
+      muslo: musloInput.value,
+      brazo: brazoInput.value
+    }
+  };
 
   const datos = JSON.parse(localStorage.getItem('pesos')) || [];
   datos.unshift(nuevoRegistro);
@@ -72,15 +88,21 @@ form.addEventListener('submit', e => {
 
   pesoInput.value = '';
   notaInput.value = '';
+  fechaInput.value = '';
+  cinturaInput.value = '';
+  pechoInput.value = '';
+  caderaInput.value = '';
+  musloInput.value = '';
+  brazoInput.value = '';
   cargarHistorial();
   renderChart();
 });
 
 document.getElementById('exportarCSV').addEventListener('click', () => {
   const datos = JSON.parse(localStorage.getItem('pesos')) || [];
-  const csv = ["fecha,peso,nota"];
+  const csv = ["fecha,peso,nota,cintura,pecho,cadera,muslo,brazo"];
   datos.forEach(reg => {
-    csv.push(`${reg.fecha},${reg.peso},"${reg.nota || ''}"`);
+    csv.push(`${reg.fecha},${reg.peso},"${reg.nota || ''}",${reg.medidas?.cintura || ""},${reg.medidas?.pecho || ""},${reg.medidas?.cadera || ""},${reg.medidas?.muslo || ""},${reg.medidas?.brazo || ""}`);
   });
   const blob = new Blob([csv.join("\n")], { type: "text/csv" });
   const url = URL.createObjectURL(blob);
@@ -99,8 +121,13 @@ document.getElementById('importarCSV').addEventListener('change', e => {
     const contenido = event.target.result;
     const lineas = contenido.split("\n").slice(1);
     const nuevosDatos = lineas.map(linea => {
-      const [fecha, peso, nota] = linea.split(",");
-      return { fecha: fecha.trim(), peso: parseFloat(peso), nota: nota?.replace(/"/g, '').trim() };
+      const [fecha, peso, nota, cintura, pecho, cadera, muslo, brazo] = linea.split(",");
+      return {
+        fecha: fecha.trim(),
+        peso: parseFloat(peso),
+        nota: nota?.replace(/"/g, '').trim(),
+        medidas: { cintura, pecho, cadera, muslo, brazo }
+      };
     }).filter(d => d.fecha && !isNaN(d.peso));
     const datosActuales = JSON.parse(localStorage.getItem('pesos')) || [];
     const todos = [...nuevosDatos, ...datosActuales];
@@ -112,21 +139,22 @@ document.getElementById('importarCSV').addEventListener('change', e => {
   lector.readAsText(archivo);
 });
 
+medidaSeleccion.addEventListener('change', () => {
+  renderChart();
+});
+
 document.getElementById('vista').addEventListener('change', e => {
   vista = e.target.value;
   renderChart();
 });
-
 document.getElementById('prev').addEventListener('click', () => {
   ajustarPeriodo(-1);
   renderChart();
 });
-
 document.getElementById('next').addEventListener('click', () => {
   ajustarPeriodo(1);
   renderChart();
 });
-
 document.getElementById('hoy').addEventListener('click', () => {
   periodoActual = new Date();
   renderChart();
@@ -174,9 +202,15 @@ function renderChart() {
     notas.push(reg.nota || '');
   });
 
+  const medida = medidaSeleccion.value;
+  const valores = medida === 'peso'
+    ? pesos
+    : datosFiltrados.map(reg => parseFloat(reg.medidas?.[medida]) || null);
+
   const objetivo = parseFloat(localStorage.getItem('objetivo')) || null;
-  resumen.textContent = pesos.length
-    ? `Promedio: ${(pesos.reduce((a, b) => a + b, 0) / pesos.length).toFixed(2)} kg`
+  const valoresValidos = valores.filter(v => v !== null);
+  resumen.textContent = valoresValidos.length
+    ? `Promedio: ${(valoresValidos.reduce((a, b) => a + b, 0) / valoresValidos.length).toFixed(2)} ${medida === 'peso' ? 'kg' : 'cm'}`
     : '';
 
   if (chart) chart.destroy();
@@ -186,15 +220,15 @@ function renderChart() {
       labels,
       datasets: [
         {
-          label: 'Peso (kg)',
-          data: pesos,
+          label: `${medida.charAt(0).toUpperCase() + medida.slice(1)} (${medida === 'peso' ? 'kg' : 'cm'})`,
+          data: valores,
           fill: false,
           borderColor: 'blue',
           tension: 0.1
         },
-        ...(objetivo ? [{
+        ...(objetivo && medida === 'peso' ? [{
           label: 'Objetivo',
-          data: Array(pesos.length).fill(objetivo),
+          data: Array(valores.length).fill(objetivo),
           borderColor: 'green',
           borderDash: [5, 5],
           pointRadius: 0
@@ -208,7 +242,7 @@ function renderChart() {
           callbacks: {
             label: function(context) {
               const idx = context.dataIndex;
-              return `Peso: ${context.raw} kg - ${notas[idx]}`;
+              return `${medida.charAt(0).toUpperCase() + medida.slice(1)}: ${context.raw} ${medida === 'peso' ? 'kg' : 'cm'} - ${notas[idx]}`;
             }
           }
         }
