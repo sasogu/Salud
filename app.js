@@ -1,7 +1,7 @@
 const form = document.getElementById('form');
 const pesoInput = document.getElementById('peso');
-const fechaInput = document.getElementById('fecha');
 const notaInput = document.getElementById('nota');
+const fechaInput = document.getElementById('fecha');
 const cinturaInput = document.getElementById('cintura');
 const pechoInput = document.getElementById('pecho');
 const caderaInput = document.getElementById('cadera');
@@ -35,11 +35,13 @@ function cargarHistorial() {
   const datos = JSON.parse(localStorage.getItem('pesos')) || [];
 
   datos.forEach((registro, index) => {
+    const li = document.createElement('li');
     const f = new Date(registro.fecha);
     const fechaLocal = f.toLocaleDateString();
     const medidas = registro.medidas || {};
-    const medidasTexto = Object.entries(medidas).filter(([_, val]) => val).map(([k, v]) => `${k}: ${v} cm`).join(', ');
-    const li = document.createElement('li');
+    const medidasTexto = Object.entries(medidas)
+      .filter(([_, val]) => val)
+      .map(([k, v]) => `${k}: ${v} cm`).join(', ');
     li.textContent = `${fechaLocal}: ${registro.peso} kg${registro.nota ? ' - ' + registro.nota : ''}${medidasTexto ? ' | ' + medidasTexto : ''}`;
 
     const btn = document.createElement('button');
@@ -104,7 +106,7 @@ document.getElementById('exportarCSV').addEventListener('click', () => {
   datos.forEach(reg => {
     csv.push(`${reg.fecha},${reg.peso},"${reg.nota || ''}",${reg.medidas?.cintura || ""},${reg.medidas?.pecho || ""},${reg.medidas?.cadera || ""},${reg.medidas?.muslo || ""},${reg.medidas?.brazo || ""}`);
   });
-  const blob = new Blob([csv.join("\n")], { type: "text/csv" });
+  const blob = new Blob([csv.join("\\n")], { type: "text/csv" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -116,22 +118,41 @@ document.getElementById('exportarCSV').addEventListener('click', () => {
 document.getElementById('importarCSV').addEventListener('change', e => {
   const archivo = e.target.files[0];
   if (!archivo) return;
+
   const lector = new FileReader();
   lector.onload = (event) => {
     const contenido = event.target.result;
-    const lineas = contenido.split("\n").slice(1);
+    const lineas = contenido.split("\\n").slice(1);
     const nuevosDatos = lineas.map(linea => {
       const [fecha, peso, nota, cintura, pecho, cadera, muslo, brazo] = linea.split(",");
       return {
         fecha: fecha.trim(),
         peso: parseFloat(peso),
-        nota: nota?.replace(/"/g, '').trim(),
+        nota: nota?.replace(/\"/g, '').trim(),
         medidas: { cintura, pecho, cadera, muslo, brazo }
       };
     }).filter(d => d.fecha && !isNaN(d.peso));
+
     const datosActuales = JSON.parse(localStorage.getItem('pesos')) || [];
-    const todos = [...nuevosDatos, ...datosActuales];
-    localStorage.setItem('pesos', JSON.stringify(todos));
+    const fechasExistentes = new Set(datosActuales.map(d => d.fecha));
+    const duplicados = nuevosDatos.filter(d => fechasExistentes.has(d.fecha));
+
+    if (duplicados.length > 0) {
+      const opcion = confirm("Hay registros con fechas ya existentes. ¿Quieres sobrescribirlos?");
+      if (opcion) {
+        const datosSinDuplicados = datosActuales.filter(d => !duplicados.some(n => n.fecha === d.fecha));
+        const todos = [...nuevosDatos, ...datosSinDuplicados];
+        localStorage.setItem('pesos', JSON.stringify(todos));
+      } else {
+        const nuevosSinDuplicados = nuevosDatos.filter(d => !fechasExistentes.has(d.fecha));
+        const todos = [...nuevosSinDuplicados, ...datosActuales];
+        localStorage.setItem('pesos', JSON.stringify(todos));
+      }
+    } else {
+      const todos = [...nuevosDatos, ...datosActuales];
+      localStorage.setItem('pesos', JSON.stringify(todos));
+    }
+
     cargarHistorial();
     renderChart();
     alert("Importación completada.");
@@ -147,14 +168,17 @@ document.getElementById('vista').addEventListener('change', e => {
   vista = e.target.value;
   renderChart();
 });
+
 document.getElementById('prev').addEventListener('click', () => {
   ajustarPeriodo(-1);
   renderChart();
 });
+
 document.getElementById('next').addEventListener('click', () => {
   ajustarPeriodo(1);
   renderChart();
 });
+
 document.getElementById('hoy').addEventListener('click', () => {
   periodoActual = new Date();
   renderChart();
@@ -202,15 +226,14 @@ function renderChart() {
     notas.push(reg.nota || '');
   });
 
-  const medida = medidaSeleccion.value;
-  const valores = medida === 'peso'
-    ? pesos
-    : datosFiltrados.map(reg => parseFloat(reg.medidas?.[medida]) || null);
-
   const objetivo = parseFloat(localStorage.getItem('objetivo')) || null;
-  const valoresValidos = valores.filter(v => v !== null);
-  resumen.textContent = valoresValidos.length
-    ? `Promedio: ${(valoresValidos.reduce((a, b) => a + b, 0) / valoresValidos.length).toFixed(2)} ${medida === 'peso' ? 'kg' : 'cm'}`
+  const valores = medidaSeleccion.value === 'peso'
+    ? datosFiltrados.map(reg => reg.peso)
+    : datosFiltrados.map(reg => parseFloat(reg.medidas?.[medidaSeleccion.value]) || null);
+
+  const promedio = valores.reduce((acc, val) => acc + (val || 0), 0) / (valores.filter(Boolean).length || 1);
+  resumen.textContent = valores.length
+    ? `Promedio: ${promedio.toFixed(2)} ${medidaSeleccion.value === 'peso' ? 'kg' : 'cm'}`
     : '';
 
   if (chart) chart.destroy();
@@ -220,13 +243,13 @@ function renderChart() {
       labels,
       datasets: [
         {
-          label: `${medida.charAt(0).toUpperCase() + medida.slice(1)} (${medida === 'peso' ? 'kg' : 'cm'})`,
+          label: medidaSeleccion.options[medidaSeleccion.selectedIndex].text,
           data: valores,
           fill: false,
           borderColor: 'blue',
           tension: 0.1
         },
-        ...(objetivo && medida === 'peso' ? [{
+        ...(objetivo && medidaSeleccion.value === 'peso' ? [{
           label: 'Objetivo',
           data: Array(valores.length).fill(objetivo),
           borderColor: 'green',
@@ -242,7 +265,7 @@ function renderChart() {
           callbacks: {
             label: function(context) {
               const idx = context.dataIndex;
-              return `${medida.charAt(0).toUpperCase() + medida.slice(1)}: ${context.raw} ${medida === 'peso' ? 'kg' : 'cm'} - ${notas[idx]}`;
+              return `${context.dataset.label}: ${context.raw}`;
             }
           }
         }
