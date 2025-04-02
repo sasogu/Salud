@@ -197,8 +197,7 @@ function ajustarPeriodo(valor) {
 function renderChart() {
   const datos = JSON.parse(localStorage.getItem('pesos')) || [];
   const labels = [];
-  const pesos = [];
-  const notas = [];
+  const datasets = [];
 
   const inicio = new Date(periodoActual);
   let fin = new Date(periodoActual);
@@ -222,41 +221,43 @@ function renderChart() {
 
   datosFiltrados.forEach(reg => {
     labels.push(reg.fecha);
-    pesos.push(reg.peso);
-    notas.push(reg.nota || '');
   });
 
-  const objetivo = parseFloat(localStorage.getItem('objetivo')) || null;
-  const valores = medidaSeleccion.value === 'peso'
-    ? datosFiltrados.map(reg => reg.peso)
-    : datosFiltrados.map(reg => parseFloat(reg.medidas?.[medidaSeleccion.value]) || null);
+  const medidasSeleccionadas = Array.from(medidaSeleccion.selectedOptions).map(opt => opt.value);
 
-  const promedio = valores.reduce((acc, val) => acc + (val || 0), 0) / (valores.filter(Boolean).length || 1);
-  resumen.textContent = valores.length
-    ? `Promedio: ${promedio.toFixed(2)} ${medidaSeleccion.value === 'peso' ? 'kg' : 'cm'}`
-    : '';
+  medidasSeleccionadas.forEach(medida => {
+    const valores = medida === 'peso'
+      ? datosFiltrados.map(reg => reg.peso)
+      : datosFiltrados.map(reg => parseFloat(reg.medidas?.[medida]) || null);
+
+    datasets.push({
+      label: medida.charAt(0).toUpperCase() + medida.slice(1),
+      data: valores,
+      fill: false,
+      borderColor: getRandomColor(),
+      tension: 0.1
+    });
+  });
+
+  // Agregar línea del objetivo
+  const objetivo = parseFloat(objetivoInput.value);
+  if (!isNaN(objetivo)) {
+    datasets.push({
+      label: 'Objetivo',
+      data: Array(labels.length).fill(objetivo), // Línea horizontal
+      borderColor: 'red',
+      borderDash: [5, 5], // Línea discontinua
+      fill: false,
+      tension: 0.1
+    });
+  }
 
   if (chart) chart.destroy();
   chart = new Chart(document.getElementById('grafico'), {
     type: 'line',
     data: {
       labels,
-      datasets: [
-        {
-          label: medidaSeleccion.options[medidaSeleccion.selectedIndex].text,
-          data: valores,
-          fill: false,
-          borderColor: 'blue',
-          tension: 0.1
-        },
-        ...(objetivo && medidaSeleccion.value === 'peso' ? [{
-          label: 'Objetivo',
-          data: Array(valores.length).fill(objetivo),
-          borderColor: 'green',
-          borderDash: [5, 5],
-          pointRadius: 0
-        }] : [])
-      ]
+      datasets
     },
     options: {
       responsive: true,
@@ -264,7 +265,6 @@ function renderChart() {
         tooltip: {
           callbacks: {
             label: function(context) {
-              const idx = context.dataIndex;
               return `${context.dataset.label}: ${context.raw}`;
             }
           }
@@ -277,6 +277,10 @@ function renderChart() {
       }
     }
   });
+}
+
+function getRandomColor() {
+  return `hsl(${Math.floor(Math.random() * 360)}, 70%, 50%)`;
 }
 
 cargarHistorial();
