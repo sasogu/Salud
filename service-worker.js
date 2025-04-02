@@ -1,6 +1,6 @@
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open('peso-cache-v1.0.1').then(cache => {
+    caches.open('peso-cache-v1.0.3').then(cache => {
       return cache.addAll([
         './',
         './index.html',
