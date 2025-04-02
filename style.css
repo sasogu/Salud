@@ -1,12 +1,59 @@
+/* Estilos generales */
 body {
-  font-family: sans-serif;
-  padding: 1em;
-  max-width: 600px;
-  margin: auto;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
   background: var(--fondo);
   color: var(--texto);
   transition: 0.3s;
 }
+
+h1, h2 {
+  text-align: center;
+}
+
+form, #controles, #historial {
+  margin: 0 auto;
+  padding: 10px;
+  max-width: 90%;
+}
+
+form label, form input, form button {
+  display: block;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+form input, form button {
+  padding: 8px;
+  font-size: 1rem;
+}
+
+#controles {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+#controles select, #controles button, #controles input {
+  flex: 1 1 auto;
+  min-width: 120px;
+  padding: 8px;
+  font-size: 1rem;
+}
+
+#medidaSeleccion {
+  height: auto;
+  min-height: 100px;
+}
+
+canvas {
+  max-width: 100%;
+  height: auto;
+}
+
 :root {
   --fondo: #f9f9f9;
   --texto: #000;
@@ -17,14 +64,80 @@ body {
   --color-muslo: #9c27b0;
   --color-brazo: #795548;
 }
+
 body.oscuro {
   --fondo: #121212;
   --texto: #fff;
 }
-input, select, button {
-  margin-bottom: 0.5em;
-  padding: 0.5em;
+
+/* Historial list */
+#historial {
+  list-style: none;
+  padding: 0;
 }
-canvas {
-  max-width: 100%;
+
+#historial li {
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#historial button {
+  background-color: #ff4d4d;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+#historial button:hover {
+  background-color: #ff1a1a;
+}
+
+/* Estilos para dispositivos pequeños */
+@media (max-width: 600px) {
+  h1, h2 {
+    font-size: 1.5rem;
+  }
+
+  form label {
+    font-size: 0.9rem;
+  }
+
+  form input, form button {
+    font-size: 0.9rem;
+  }
+
+  #controles {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  #controles select, #controles button, #controles input {
+    min-width: 100%;
+  }
+
+  #historial li {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  #historial button {
+    margin-top: 5px;
+    align-self: flex-end;
+  }
+}
+
+/* Estilos para dispositivos grandes */
+@media (min-width: 601px) {
+  body {
+    max-width: 600px;
+    margin: 0 auto;
+  }
 }
