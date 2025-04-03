@@ -38,11 +38,12 @@ function cargarHistorial() {
     const li = document.createElement('li');
     const f = new Date(registro.fecha);
     const fechaLocal = f.toLocaleDateString();
+    const hora = registro.hora || ''; // Mostrar la hora si está disponible
     const medidas = registro.medidas || {};
     const medidasTexto = Object.entries(medidas)
       .filter(([_, val]) => val)
       .map(([k, v]) => `${k}: ${v} cm`).join(', ');
-    li.textContent = `${fechaLocal}: ${registro.peso} kg${registro.nota ? ' - ' + registro.nota : ''}${medidasTexto ? ' | ' + medidasTexto : ''}`;
+    li.textContent = `${fechaLocal} ${hora}: ${registro.peso} kg${registro.nota ? ' - ' + registro.nota : ''}${medidasTexto ? ' | ' + medidasTexto : ''}`;
 
     const btn = document.createElement('button');
     btn.textContent = '❌';
@@ -73,8 +74,14 @@ form.addEventListener('submit', e => {
     fecha = f.toISOString().split('T')[0];
   }
 
+  const ahora = new Date();
+  const hora = ahora.toLocaleTimeString(); // Obtener la hora actual
+
   const nuevoRegistro = {
-    fecha, peso, nota,
+    fecha,
+    hora, // Guardar la hora
+    peso,
+    nota,
     medidas: {
       cintura: cinturaInput.value,
       pecho: pechoInput.value,
@@ -102,11 +109,11 @@ form.addEventListener('submit', e => {
 
 document.getElementById('exportarCSV').addEventListener('click', () => {
   const datos = JSON.parse(localStorage.getItem('pesos')) || [];
-  const csv = ["fecha,peso,nota,cintura,pecho,cadera,muslo,brazo"];
+  const csv = ["fecha,hora,peso,nota,cintura,pecho,cadera,muslo,brazo"];
   datos.forEach(reg => {
-    csv.push(`${reg.fecha},${reg.peso},"${reg.nota || ''}",${reg.medidas?.cintura || ""},${reg.medidas?.pecho || ""},${reg.medidas?.cadera || ""},${reg.medidas?.muslo || ""},${reg.medidas?.brazo || ""}`);
+    csv.push(`${reg.fecha},${reg.hora || ''},${reg.peso},"${reg.nota || ''}",${reg.medidas?.cintura || ""},${reg.medidas?.pecho || ""},${reg.medidas?.cadera || ""},${reg.medidas?.muslo || ""},${reg.medidas?.brazo || ""}`);
   });
-  const blob = new Blob([csv.join("\\n")], { type: "text/csv" });
+  const blob = new Blob([csv.join("\n")], { type: "text/csv" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -122,11 +129,12 @@ document.getElementById('importarCSV').addEventListener('change', e => {
   const lector = new FileReader();
   lector.onload = (event) => {
     const contenido = event.target.result;
-    const lineas = contenido.split("\\n").slice(1);
+    const lineas = contenido.split("\n").slice(1);
     const nuevosDatos = lineas.map(linea => {
-      const [fecha, peso, nota, cintura, pecho, cadera, muslo, brazo] = linea.split(",");
+      const [fecha, hora, peso, nota, cintura, pecho, cadera, muslo, brazo] = linea.split(",");
       return {
         fecha: fecha.trim(),
+        hora: hora?.trim(), // Procesar la hora
         peso: parseFloat(peso),
         nota: nota?.replace(/\"/g, '').trim(),
         medidas: { cintura, pecho, cadera, muslo, brazo }
@@ -282,6 +290,15 @@ function renderChart() {
 function getRandomColor() {
   return `hsl(${Math.floor(Math.random() * 360)}, 70%, 50%)`;
 }
+
+// Seleccionar "Peso" por defecto en el select de medidaSeleccion
+document.addEventListener('DOMContentLoaded', () => {
+  const pesoOption = medidaSeleccion.querySelector('option[value="peso"]');
+  if (pesoOption) {
+    pesoOption.selected = true; // Seleccionar "Peso" por defecto
+  }
+  renderChart(); // Renderizar el gráfico con la selección inicial
+});
 
 cargarHistorial();
 renderChart();

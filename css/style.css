@@ -27,6 +27,14 @@ body.oscuro {
 input, select, button {
   margin-bottom: 0.5em;
   padding: 0.5em;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-sizing: border-box;
+}
+
+input[type="time"], input[type="date"], input[type="number"], input[type="text"] {
+  width: 100%;
 }
 
 canvas {
@@ -68,6 +76,40 @@ th {
   background-color: #45a049;
 }
 
+#historial {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0;
+}
+
+#historial li {
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#historial li span {
+  display: block;
+}
+
+#historial button {
+  background-color: #ff4d4d;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+#historial button:hover {
+  background-color: #ff1a1a;
+}
+
 /* Estilos responsivos para dispositivos pequeños */
 @media (max-width: 600px) {
   body {
@@ -99,6 +141,16 @@ th {
 
   th, td {
     padding: 5px;
+  }
+
+  #historial li {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  #historial button {
+    margin-top: 5px;
+    align-self: flex-end;
   }
 }
 
