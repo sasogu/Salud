@@ -1,4 +1,4 @@
-const CACHE_NAME = 'peso-cache-v1.0.12'; // Cambia la versión aquí
+const CACHE_NAME = 'peso-cache-v1.0.13'; // Cambia la versión aquí
 
 self.addEventListener('install', e => {
   e.waitUntil(
