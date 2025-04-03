@@ -9,54 +9,39 @@
     <link rel="manifest" href="manifest.json" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
-<body>
+  <body>
 
-<h2>Registro de Tensión Arterial</h2>
+    <h2>Registro de Tensión Arterial</h2>
+    
+    <form id="formulario">
+      <label>Sistólica: <input type="number" id="sistolica" required></label><br>
+      <label>Diastólica: <input type="number" id="diastolica" required></label><br>
+      <button type="submit">Guardar</button>
+    </form>
+    
+    <div id="acciones-globales">
+      <button onclick="exportarCSV()">Exportar a CSV</button>
+      <button onclick="window.print()">Imprimir en PDF</button>
+      <br>
+      <input type="file" id="archivoCSV" accept=".csv">
+<button onclick="importarCSV()">Importar CSV</button>
 
-<form id="formulario">
-  <label>Sistólica: <input type="number" id="sistolica" required></label><br>
-  <label>Diastólica: <input type="number" id="diastolica" required></label><br>
-  <button type="submit">Guardar</button>
-</form>
-
-<table id="tabla">
-  <thead>
-    <tr>
-      <th>Fecha</th>
-      <th>Hora</th>
-      <th>Sistólica</th>
-      <th>Diastólica</th>
-      <th>Resultado</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
-
-<script>
-  function interpretar(sis, dia) {
-    if (sis < 90 || dia < 60) return "Hipotensión";
-    if (sis <= 120 && dia <= 80) return "Normal";
-    if (sis <= 139 || dia <= 89) return "Elevada";
-    if (sis <= 159 || dia <= 99) return "Hipertensión 1";
-    return "Hipertensión 2";
-  }
-
-  document.getElementById("formulario").addEventListener("submit", function(e) {
-    e.preventDefault();
-    const sis = parseInt(document.getElementById("sistolica").value);
-    const dia = parseInt(document.getElementById("diastolica").value);
-    const ahora = new Date();
-    const fecha = ahora.toLocaleDateString();
-    const hora = ahora.toLocaleTimeString();
-    const resultado = interpretar(sis, dia);
-
-    const fila = document.createElement("tr");
-    fila.innerHTML = `<td>${fecha}</td><td>${hora}</td><td>${sis}</td><td>${dia}</td><td>${resultado}</td>`;
-    document.querySelector("#tabla tbody").appendChild(fila);
-
-    e.target.reset();
-  });
-</script>
-
-</body>
-</html>
+    </div>
+    
+    <table id="tabla">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Hora</th>
+          <th>Sistólica</th>
+          <th>Diastólica</th>
+          <th>Resultado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    
+    <script src="./js/tension.js"></script>
+    </body>
+    </html>
