@@ -1,6 +1,6 @@
 {
-  "name": "Control de Peso",
-  "short_name": "Peso",
+  "name": "Mi Salud",
+  "short_name": "Salud",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#ffffff",
