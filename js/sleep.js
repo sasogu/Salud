@@ -27,6 +27,7 @@ function saveSleepHours() {
   sleepData[today] = hours;
   localStorage.setItem('sleepData', JSON.stringify(sleepData));
   updateChart();
+  renderSleepList();
   alert('Horas de sueño guardadas.');
 }
 
@@ -115,12 +116,43 @@ function importData(event) {
       sleepData = importedData;
       localStorage.setItem('sleepData', JSON.stringify(sleepData));
       updateChart();
+      renderSleepList();
       alert('Datos importados correctamente.');
     } catch {
       alert('Archivo no válido.');
     }
   };
   reader.readAsText(file);
+}
+
+// Renderizar listado de registros
+function renderSleepList() {
+  const listContainer = document.getElementById('sleep-list');
+  if (!listContainer) return;
+
+  listContainer.innerHTML = '';
+
+  const sortedDates = Object.keys(sleepData).sort((a, b) => b.localeCompare(a)); // Más recientes primero
+
+  sortedDates.forEach(date => {
+    const item = document.createElement('div');
+    item.className = 'sleep-item';
+    item.innerHTML = `
+      <span>${date}: ${sleepData[date]} h</span>
+      <button onclick="deleteSleepEntry('${date}')">Eliminar</button>
+    `;
+    listContainer.appendChild(item);
+  });
+}
+
+// Eliminar un registro concreto
+function deleteSleepEntry(date) {
+  if (confirm(`¿Seguro que quieres eliminar el registro del ${date}?`)) {
+    delete sleepData[date];
+    localStorage.setItem('sleepData', JSON.stringify(sleepData));
+    updateChart();
+    renderSleepList();
+  }
 }
 
 // Pedir permiso de notificaciones
@@ -161,4 +193,5 @@ document.getElementById('notify-permission').addEventListener('click', requestNo
 
 // Inicializar
 updateChart();
+renderSleepList();
 showTip();
