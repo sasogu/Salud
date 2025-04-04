@@ -120,3 +120,9 @@ function importarCSV() {
 
   lector.readAsText(archivo);
 }
+
+function saveTensionData(date, systolic, diastolic, result) {
+  const tensionData = JSON.parse(localStorage.getItem('tensionData')) || {};
+  tensionData[date] = { systolic, diastolic, result };
+  localStorage.setItem('tensionData', JSON.stringify(tensionData));
+}

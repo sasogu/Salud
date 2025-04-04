@@ -165,3 +165,23 @@ th {
     width: 200px;
   }
 }
+
+.backup-section {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.backup-section button {
+  margin: 5px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 5px;
+  background-color: #4caf50;
+  color: white;
+  cursor: pointer;
+}
+
+.backup-section button:hover {
+  background-color: #45a049;
+}
