@@ -1,10 +1,21 @@
 {
+  "id": "/",
+  "scope": "/",
+  "handle_links": "preferred",
   "name": "Mi Salud",
-  "short_name": "Salud",
+  "display": "standalone",
   "start_url": "./index.html",
-  "display": "fullscreen",
-  "background_color": "#ffffff",
+  "short_name": "Mi Salud",
   "theme_color": "#3f51b5",
+  "description": "Aplicación sguimiento de salud",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "display_override": ["window-controls-overlay"],
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
   "icons": [
     {
       "src": "./assets/icon-192.png",
@@ -15,6 +26,43 @@
       "src": "./assets/icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
+    },
+    {
+      "src": "./assets/icon-192.png",
+      "sizes": "48x48",
+      "type": "image/png"
+    },
+    {
+      "src": "./assets/icon-192.png",
+      "sizes": "24x24",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "./assets/icon-192.png",
+      "sizes": "1617x1012",
+      "type": "image/png"
+    }
+  ],
+  "features": [
+    "Cross Platform",
+    "fast",
+    "simple"
+  ],
+  "categories": [
+    "health",
+    "fitness",
+    "productivity"
+  ],
+  "shortcuts": [
+    {
+      "name": "Mi Salud",
+      "short_name": "Mi Salud",
+      "description": "Seguimiento de salud",
+      "url": "/",
+      "icons": [{ "src": "./assets/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }
+
