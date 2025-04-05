@@ -60,9 +60,12 @@ th {
 .boton {
   display: inline-block;
   width: 200px;
-  padding: 20px;
+  height: 60px; /* Asegúrate de definir una altura */
+  line-height: 60px; /* Igual a la altura para centrar verticalmente */
+  padding: 0; /* Elimina el padding para evitar desajustes */
   margin: 20px;
   font-size: 18px;
+  text-align: center; /* Centra horizontalmente */
   text-decoration: none;
   background-color: #4CAF50;
   color: white;
@@ -75,6 +78,22 @@ th {
   transform: scale(1.05);
   background-color: #45a049;
 }
+
+.backup-section button {
+  margin: 5px;
+  padding: 20px 20px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 5px;
+  background-color: #4f4caf;
+  color: white;
+  cursor: pointer;
+}
+
+.backup-section button:hover {
+  background-color: #45a049;
+}
+
 
 #historial {
   list-style: none;
@@ -118,7 +137,7 @@ th {
   }
 
   .boton {
-    width: 100%;
+    width: 90%;
     padding: 15px;
     font-size: 16px;
     margin: 10px 0;
@@ -171,20 +190,6 @@ th {
   text-align: center;
 }
 
-.backup-section button {
-  margin: 5px;
-  padding: 10px 20px;
-  font-size: 1rem;
-  border: none;
-  border-radius: 5px;
-  background-color: #4caf50;
-  color: white;
-  cursor: pointer;
-}
-
-.backup-section button:hover {
-  background-color: #45a049;
-}
 
 .chart-section canvas {
   width: 100%;
@@ -192,4 +197,34 @@ th {
   height: 400px;
   margin: 0 auto;
   display: block;
+}
+
+h1 {
+  font-family: 'Arial', sans-serif; /* Cambia la fuente si lo prefieres */
+  font-size: 2.5rem; /* Tamaño del texto */
+  font-weight: bold; /* Negrita */
+  text-align: center; /* Centrado horizontal */
+  color: white; /* Color del texto */
+  background: linear-gradient(90deg, #4CAF50, #2196F3); /* Degradado de color */
+  -webkit-background-clip: text; /* Solo aplica el degradado al texto */
+  -webkit-text-fill-color: transparent; /* Hace el fondo del texto transparente */
+  text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3); /* Sombra sutil */
+  margin: 20px 0; /* Espaciado superior e inferior */
+  padding: 10px; /* Espaciado interno */
+  border-radius: 10px; /* Bordes redondeados */
+}
+
+h2 {
+  font-family: 'Arial', sans-serif; /* Cambia la fuente si lo prefieres */
+  font-size: 2rem; /* Tamaño del texto */
+  font-weight: bold; /* Negrita */
+  color: #4CAF50; /* Color del texto */
+  text-align: center; /* Centrado horizontal */
+  margin: 20px 0; /* Espaciado superior e inferior */
+  position: relative; /* Necesario para el subrayado decorativo */
+
+  /* Subrayado decorativo */
+  padding-bottom: 10px;
+  border-bottom: 3px solid #4CAF50; /* Línea debajo del texto */
+  display: inline-block; /* Ajusta el ancho al contenido */
 }
