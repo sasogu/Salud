@@ -14,12 +14,26 @@
     <h2>Registro de Tensión Arterial</h2>
     
     <form id="formulario">
-      <label>Sistólica: <input type="number" id="sistolica" required></label><br>
-      <label>Diastólica: <input type="number" id="diastolica" required></label><br>
+      <label for="sistolica">Sistólica:</label>
+      <input type="number" id="sistolica" required>
+      
+      <label for="diastolica">Diastólica:</label>
+      <input type="number" id="diastolica" required>
+      
+      <label for="pulso">Pulso:</label>
+      <input type="number" id="pulso" required>
+      
+      <label for="comentario">Comentario:</label>
+      <input type="text" id="comentario">
+      
       <button type="submit">Guardar</button>
     </form>
     
-    
+    <section class="chart-section">
+      <h2>Evolución de la Tensión Arterial</h2>
+      <canvas id="tension-chart"></canvas>
+    </section> 
+  
     
     <table id="tabla">
       <thead>
@@ -29,13 +43,15 @@
           <th>Sistólica</th>
           <th>Diastólica</th>
           <th>Resultado</th>
-          <th>Acciones</th>
+          <th>Pulso</th>
+          <th>Comentario</th>
+          <th>Acción</th>
         </tr>
       </thead>
       <tbody></tbody>
     </table>
 
-
+  
     
     <script src="./js/tension.js"></script>
     </body>
