@@ -45,19 +45,45 @@ function cargarHistorial() {
 
     li.textContent = `${fecha}: ${registro.weight} kg${registro.note ? ' - ' + registro.note : ''}${medidasTexto ? ' | ' + medidasTexto : ''}`;
 
-    const btn = document.createElement('button');
-    btn.textContent = '❌';
-    btn.style.marginLeft = '10px';
-    btn.onclick = () => {
+    // Botón de edición
+    const editBtn = document.createElement('button');
+    editBtn.textContent = '✏️';
+    editBtn.style.marginLeft = '10px';
+    editBtn.onclick = () => {
+      editarRegistro(fecha, registro);
+    };
+
+    // Botón de eliminación
+    const deleteBtn = document.createElement('button');
+    deleteBtn.textContent = '❌';
+    deleteBtn.style.marginLeft = '10px';
+    deleteBtn.onclick = () => {
       delete datos[fecha];
       localStorage.setItem('weightData', JSON.stringify(datos));
       cargarHistorial();
       renderChart();
     };
 
-    li.appendChild(btn);
+    li.appendChild(editBtn);
+    li.appendChild(deleteBtn);
     historial.appendChild(li);
   });
+}
+
+// Editar un registro
+function editarRegistro(fecha, registro) {
+  // Cargar los datos en el formulario
+  fechaInput.value = fecha;
+  pesoInput.value = registro.weight;
+  notaInput.value = registro.note || '';
+  cinturaInput.value = registro.measures?.cintura || '';
+  pechoInput.value = registro.measures?.pecho || '';
+  caderaInput.value = registro.measures?.cadera || '';
+  musloInput.value = registro.measures?.muslo || '';
+  brazoInput.value = registro.measures?.brazo || '';
+
+  // Marcar el formulario como en modo edición
+  form.dataset.editingDate = fecha;
 }
 
 // Guardar datos al enviar el formulario
@@ -84,11 +110,25 @@ form.addEventListener('submit', e => {
     measures: medidas
   };
 
-  weightData[fecha] = nuevoRegistro;
+  // Verificar si se está editando un registro
+  const editingDate = form.dataset.editingDate;
+  if (editingDate) {
+    // Actualizar el registro existente
+    delete weightData[editingDate]; // Eliminar el registro anterior si la fecha cambió
+    weightData[fecha] = nuevoRegistro;
+
+    // Limpiar el estado de edición
+    delete form.dataset.editingDate;
+  } else {
+    // Agregar un nuevo registro
+    weightData[fecha] = nuevoRegistro;
+  }
+
   localStorage.setItem('weightData', JSON.stringify(weightData));
 
   cargarHistorial();
   renderChart();
+  form.reset(); // Limpiar el formulario
 });
 
 // Renderizar el gráfico

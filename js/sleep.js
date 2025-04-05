@@ -17,8 +17,8 @@ const tips = [
 // ====================
 
 // Guardar datos de sueño
-function saveSleepData(date, hours) {
-  sleepData[date] = { hours };
+function saveSleepData(date, hours, comment) {
+  sleepData[date] = { hours, comment };
   localStorage.setItem('sleepData', JSON.stringify(sleepData));
   loadSleepData();
   renderChart();
@@ -31,9 +31,17 @@ function loadSleepData() {
 
   Object.entries(sleepData).forEach(([date, record]) => {
     const div = document.createElement('div');
-    div.textContent = `${date}: ${record.hours} horas`;
+    div.textContent = `${date}: ${record.hours} horas, Comentario: ${record.comment || 'N/A'}`;
 
-    // Crear botón de eliminación
+    // Botón de edición
+    const editButton = document.createElement('button');
+    editButton.textContent = '✏️';
+    editButton.style.marginLeft = '10px';
+    editButton.addEventListener('click', () => {
+      editSleepEntry(date, record);
+    });
+
+    // Botón de eliminación
     const deleteButton = document.createElement('button');
     deleteButton.textContent = '❌';
     deleteButton.style.marginLeft = '10px';
@@ -41,9 +49,21 @@ function loadSleepData() {
       deleteSleepEntry(date);
     });
 
+    div.appendChild(editButton);
     div.appendChild(deleteButton);
     sleepList.appendChild(div);
   });
+}
+
+// Editar un registro
+function editSleepEntry(date, record) {
+  // Cargar los datos en el formulario
+  document.getElementById('sleep-hours').value = record.hours;
+  document.getElementById('sleep-comment').value = record.comment || '';
+  
+  // Marcar el formulario como en modo edición
+  const saveButton = document.getElementById('save-button');
+  saveButton.dataset.editingDate = date;
 }
 
 // Renderizar el gráfico
@@ -123,13 +143,28 @@ function scheduleDailyNotification() {
 // ====================
 document.getElementById('save-button').addEventListener('click', () => {
   const hours = parseFloat(document.getElementById('sleep-hours').value);
+  const comment = document.getElementById('sleep-comment').value;
+
   if (isNaN(hours) || hours < 0 || hours > 24) {
     alert('Por favor, ingresa un número válido entre 0 y 24.');
     return;
   }
 
-  const date = new Date().toISOString().split('T')[0];
-  saveSleepData(date, hours);
+  const saveButton = document.getElementById('save-button');
+  const editingDate = saveButton.dataset.editingDate;
+  const date = editingDate || new Date().toISOString().split('T')[0];
+
+  // Guardar o actualizar el registro
+  sleepData[date] = { hours, comment };
+
+  // Si se estaba editando, limpiar el estado de edición
+  if (editingDate) {
+    delete saveButton.dataset.editingDate;
+  }
+
+  localStorage.setItem('sleepData', JSON.stringify(sleepData));
+  loadSleepData();
+  renderChart();
   alert('Datos guardados correctamente.');
 });
 document.getElementById('view-selector').addEventListener('change', renderChart);

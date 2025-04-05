@@ -10,6 +10,7 @@ function interpretar(sis, dia) {
 
 document.getElementById("formulario").addEventListener("submit", function (e) {
   e.preventDefault();
+
   const sis = parseInt(document.getElementById("sistolica").value);
   const dia = parseInt(document.getElementById("diastolica").value);
   const pulso = parseInt(document.getElementById("pulso").value);
@@ -17,13 +18,33 @@ document.getElementById("formulario").addEventListener("submit", function (e) {
   const ahora = new Date();
   const fecha = ahora.toLocaleDateString();
   const hora = ahora.toLocaleTimeString();
+
   const resultado = interpretar(sis, dia);
 
-  agregarFila(fecha, hora, sis, dia, resultado, pulso, comentario);
+  // Verificar si se está editando un registro
+  const editingRowIndex = this.dataset.editingRow;
+  if (editingRowIndex) {
+    // Actualizar la fila existente
+    const fila = document.querySelector(`#tabla tbody tr:nth-child(${editingRowIndex})`);
+    const celdas = fila.querySelectorAll("td");
+
+    celdas[2].textContent = sis;
+    celdas[3].textContent = dia;
+    celdas[4].textContent = resultado;
+    celdas[5].textContent = pulso;
+    celdas[6].textContent = comentario;
+
+    // Limpiar el estado de edición
+    delete this.dataset.editingRow;
+  } else {
+    // Agregar un nuevo registro
+    agregarFila(fecha, hora, sis, dia, resultado, pulso, comentario);
+  }
+
   guardarDatos(); // Guardar los datos en LocalStorage
   renderChart(); // Actualizar la gráfica
 
-  e.target.reset();
+  e.target.reset(); // Limpiar el formulario
 });
 
 function agregarFila(fecha, hora, sis, dia, resultado, pulso, comentario) {
@@ -38,9 +59,26 @@ function agregarFila(fecha, hora, sis, dia, resultado, pulso, comentario) {
     <td>${resultado}</td>
     <td>${pulso}</td>
     <td>${comentario}</td>
-    <td class="acciones"><button onclick="eliminarFila(this)">Eliminar</button></td>
+    <td class="acciones">
+      <button onclick="editarFila(this)">✏️ Editar</button>
+      <button onclick="eliminarFila(this)">❌ Eliminar</button>
+    </td>
   `;
   tbody.appendChild(fila);
+}
+
+function editarFila(boton) {
+  const fila = boton.parentNode.parentNode;
+  const celdas = fila.querySelectorAll("td");
+
+  // Cargar los datos en el formulario
+  document.getElementById("sistolica").value = celdas[2].textContent;
+  document.getElementById("diastolica").value = celdas[3].textContent;
+  document.getElementById("pulso").value = celdas[5].textContent;
+  document.getElementById("comentario").value = celdas[6].textContent;
+
+  // Guardar la referencia de la fila que se está editando
+  document.getElementById("formulario").dataset.editingRow = fila.rowIndex;
 }
 
 function eliminarFila(boton) {

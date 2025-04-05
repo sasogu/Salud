@@ -1,4 +1,4 @@
-const CACHE_NAME = 'peso-cache-v1.0.22'; // Cambia la versión aquí
+const CACHE_NAME = 'peso-cache-v1.0.23'; // Cambia la versión aquí
 
 self.addEventListener('install', e => {
   e.waitUntil(
@@ -24,13 +24,16 @@ self.addEventListener('install', e => {
 });
 
 self.addEventListener('activate', e => {
+  console.log(`Activating new Service Worker: ${CACHE_NAME}`);
   e.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cache => {
           if (cache !== CACHE_NAME) {
             console.log(`Deleting old cache: ${cache}`);
-            return caches.delete(cache);
+            return caches.delete(cache).catch(err => {
+              console.error(`Failed to delete cache: ${cache}`, err);
+            });
           }
         })
       );
