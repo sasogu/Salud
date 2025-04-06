@@ -37,31 +37,12 @@
       "type": "image/png"
     }
   ],
-  "screenshots": [
-    {
-      "src": "./assets/icon-192.png",
-      "sizes": "1617x1012",
-      "type": "image/png"
-    }
-  ],
-  "features": [
-    "Cross Platform",
-    "fast",
-    "simple"
-  ],
+  
+ 
   "categories": [
     "health",
     "fitness",
     "productivity"
-  ],
-  "shortcuts": [
-    {
-      "name": "Mi Salud",
-      "short_name": "Mi Salud",
-      "description": "Seguimiento de salud",
-      "url": "/",
-      "icons": [{ "src": "./assets/icon-192.png", "sizes": "192x192" }]
-    }
   ]
+  
 }
-
