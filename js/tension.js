@@ -45,6 +45,9 @@ document.getElementById("formulario").addEventListener("submit", function (e) {
   renderChart(); // Actualizar la gráfica
 
   e.target.reset(); // Limpiar el formulario
+
+  // Mostrar popup de confirmación
+  alert("Registro añadido correctamente.");
 });
 
 function agregarFila(fecha, hora, sis, dia, resultado, pulso, comentario) {
@@ -83,9 +86,14 @@ function editarFila(boton) {
 
 function eliminarFila(boton) {
   const fila = boton.parentNode.parentNode;
-  fila.remove();
-  guardarDatos(); // Guardar los datos actualizados en LocalStorage
-  renderChart(); // Actualizar la gráfica
+
+  // Mostrar confirmación antes de borrar
+  const confirmDelete = confirm("¿Estás seguro de que deseas eliminar este registro?");
+  if (confirmDelete) {
+    fila.remove();
+    guardarDatos(); // Guardar los datos actualizados en LocalStorage
+    renderChart(); // Actualizar la gráfica
+  }
 }
 
 function guardarDatos() {
@@ -107,6 +115,19 @@ function guardarDatos() {
 
 function cargarDatos() {
   const datos = JSON.parse(localStorage.getItem("tensionDatos")) || [];
+
+  // Ordenar los datos por fecha y hora (más recientes primero)
+  datos.sort((a, b) => {
+    const fechaHoraA = new Date(`${a.fecha} ${a.hora}`);
+    const fechaHoraB = new Date(`${b.fecha} ${b.hora}`);
+    return fechaHoraB - fechaHoraA; // Orden descendente
+  });
+
+  // Limpiar la tabla antes de agregar los registros
+  const tbody = document.querySelector("#tabla tbody");
+  tbody.innerHTML = "";
+
+  // Agregar los registros ordenados a la tabla
   datos.forEach(({ fecha, hora, sis, dia, resultado, pulso, comentario }) => {
     agregarFila(fecha, hora, sis, dia, resultado, pulso, comentario);
   });

@@ -29,7 +29,15 @@ function loadSleepData() {
   const sleepList = document.getElementById('sleep-list');
   sleepList.innerHTML = '';
 
-  Object.entries(sleepData).forEach(([date, record]) => {
+  // Ordenar los datos por fecha (más recientes primero)
+  const registrosOrdenados = Object.entries(sleepData).sort(([fechaA], [fechaB]) => {
+    const fechaHoraA = new Date(fechaA);
+    const fechaHoraB = new Date(fechaB);
+    return fechaHoraB - fechaHoraA; // Orden descendente
+  });
+
+  // Agregar los registros ordenados al historial
+  registrosOrdenados.forEach(([date, record]) => {
     const div = document.createElement('div');
     div.textContent = `${date}: ${record.hours} horas, Comentario: ${record.comment || 'N/A'}`;
 
@@ -46,7 +54,14 @@ function loadSleepData() {
     deleteButton.textContent = '❌';
     deleteButton.style.marginLeft = '10px';
     deleteButton.addEventListener('click', () => {
-      deleteSleepEntry(date);
+      // Mostrar confirmación antes de borrar
+      const confirmDelete = confirm(`¿Seguro que quieres eliminar el registro del ${date}?`);
+      if (confirmDelete) {
+        delete sleepData[date];
+        localStorage.setItem('sleepData', JSON.stringify(sleepData));
+        renderChart();
+        loadSleepData();
+      }
     });
 
     div.appendChild(editButton);
@@ -165,7 +180,9 @@ document.getElementById('save-button').addEventListener('click', () => {
   localStorage.setItem('sleepData', JSON.stringify(sleepData));
   loadSleepData();
   renderChart();
-  alert('Datos guardados correctamente.');
+
+  // Mostrar popup de confirmación
+  alert('Registro añadido correctamente.');
 });
 document.getElementById('view-selector').addEventListener('change', renderChart);
 document.getElementById('notify-permission').addEventListener('click', requestNotificationPermission);

@@ -228,3 +228,18 @@ h2 {
   border-bottom: 3px solid #4CAF50; /* Línea debajo del texto */
   display: inline-block; /* Ajusta el ancho al contenido */
 }
+
+button[type="submit"] {
+  background-color: #4CAF50; /* Color verde */
+  color: white; /* Texto blanco */
+  font-size: 1.2rem; /* Tamaño de fuente más grande */
+  padding: 10px 20px; /* Espaciado interno */
+  border: none; /* Sin borde */
+  border-radius: 5px; /* Bordes redondeados */
+  cursor: pointer; /* Cambiar el cursor al pasar por encima */
+  transition: background-color 0.3s ease; /* Animación al pasar el mouse */
+}
+
+button[type="submit"]:hover {
+  background-color: #45a049; /* Color verde más oscuro al pasar el mouse */
+}
