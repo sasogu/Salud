@@ -243,3 +243,18 @@ button[type="submit"] {
 button[type="submit"]:hover {
   background-color: #45a049; /* Color verde más oscuro al pasar el mouse */
 }
+
+.guardar-btn {
+  background-color: #4CAF50; /* Color verde */
+  color: white; /* Texto blanco */
+  font-size: 1.2rem; /* Tamaño de fuente */
+  padding: 10px 20px; /* Espaciado interno */
+  border: none; /* Sin borde */
+  border-radius: 5px; /* Bordes redondeados */
+  cursor: pointer; /* Cambiar el cursor al pasar por encima */
+  transition: background-color 0.3s ease; /* Animación al pasar el mouse */
+}
+
+.guardar-btn:hover {
+  background-color: #45a049; /* Verde más oscuro al pasar el mouse */
+}
