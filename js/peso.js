@@ -170,6 +170,7 @@ function renderChart() {
   // Mapear los datos filtrados
   const pesoData = labelsFiltrados.map(fecha => datos[fecha]?.weight || null);
 
+  // Crear el array de datasets con la línea de peso
   const datasets = [
     {
       label: 'Peso (kg)',
@@ -178,6 +179,43 @@ function renderChart() {
       fill: false
     }
   ];
+
+  // Obtener las métricas seleccionadas
+  const selectedMetrics = Array.from(document.getElementById('data-selector').selectedOptions).map(option => option.value);
+
+  // Agregar las métricas seleccionadas al gráfico
+  selectedMetrics.forEach(metric => {
+    const metricData = labelsFiltrados.map(fecha => parseFloat(datos[fecha]?.measures?.[metric]) || null);
+    const metricColors = {
+      cintura: 'green',
+      pecho: 'red',
+      cadera: 'purple',
+      muslo: 'orange',
+      brazo: 'brown'
+    };
+
+    if (metricData.some(value => value !== null)) { // Solo agregar si hay datos válidos
+      datasets.push({
+        label: `${metric.charAt(0).toUpperCase() + metric.slice(1)} (cm)`,
+        data: metricData,
+        borderColor: metricColors[metric] || 'gray',
+        fill: false
+      });
+    }
+  });
+
+  // Agregar la línea de objetivo si está definida
+  const objetivo = parseFloat(document.getElementById('objetivo').value) || null;
+  if (objetivo) {
+    const objetivoData = labelsFiltrados.map(() => objetivo);
+    datasets.push({
+      label: 'Objetivo',
+      data: objetivoData,
+      borderColor: 'black',
+      borderDash: [5, 5], // Línea punteada
+      fill: false
+    });
+  }
 
   // Destruir la gráfica anterior si existe
   if (chart) chart.destroy();
