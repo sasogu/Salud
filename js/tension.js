@@ -100,8 +100,13 @@ function guardarDatos() {
   const filas = document.querySelectorAll("#tabla tbody tr");
   const datos = Array.from(filas).map((fila) => {
     const celdas = fila.querySelectorAll("td");
+
+    // Convertir la fecha al formato YYYY-MM-DD
+    const [dia, mes, anio] = celdas[0].textContent.split("/");
+    const fechaFormateada = `${anio}-${mes.padStart(2, "0")}-${dia.padStart(2, "0")}`;
+
     return {
-      fecha: celdas[0].textContent,
+      fecha: fechaFormateada,
       hora: celdas[1].textContent,
       sis: celdas[2].textContent,
       dia: celdas[3].textContent,
@@ -118,8 +123,8 @@ function cargarDatos() {
 
   // Ordenar los datos por fecha y hora (más recientes primero)
   datos.sort((a, b) => {
-    const fechaHoraA = new Date(`${a.fecha} ${a.hora}`);
-    const fechaHoraB = new Date(`${b.fecha} ${b.hora}`);
+    const fechaHoraA = new Date(`${a.fecha}T${a.hora}`);
+    const fechaHoraB = new Date(`${b.fecha}T${b.hora}`);
     return fechaHoraB - fechaHoraA; // Orden descendente
   });
 
@@ -129,7 +134,11 @@ function cargarDatos() {
 
   // Agregar los registros ordenados a la tabla
   datos.forEach(({ fecha, hora, sis, dia, resultado, pulso, comentario }) => {
-    agregarFila(fecha, hora, sis, dia, resultado, pulso, comentario);
+    // Convertir la fecha al formato DD/MM/YYYY para mostrarla en la tabla
+    const [anio, mes, diaNum] = fecha.split("-");
+    const fechaFormateada = `${diaNum}/${mes}/${anio}`;
+
+    agregarFila(fechaFormateada, hora, sis, dia, resultado, pulso, comentario);
   });
 }
 
