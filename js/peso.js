@@ -233,7 +233,7 @@ function renderChart() {
         x: { ticks: { autoSkip: true } },
         y: {
           beginAtZero: false, // No comenzar desde cero
-          min: 80, // Límite inferior del eje Y
+          min: 85, // Límite inferior del eje Y
           max: 110, // Límite superior del eje Y
           ticks: {
             stepSize: 5 // Incrementos en el eje Y
@@ -274,6 +274,7 @@ function calcularFinPeriodo(fecha, vista) {
 
 // Inicializar
 document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('vista-selector').value = vista; // Sincronizar el selector con la vista predeterminada
   cargarHistorial();
   renderChart();
 });
@@ -311,4 +312,6 @@ document.getElementById('vista-selector').addEventListener('change', (e) => {
   vista = e.target.value; // Cambiar la vista seleccionada
   renderChart();
 });
+
+
 
