@@ -14,7 +14,7 @@ const medidaSeleccion = document.getElementById('medidaSeleccion');
 let weightData = JSON.parse(localStorage.getItem('weightData')) || {};
 let chart;
 let periodoActual = new Date();
-let vista = 'mes';
+let vista = 'año'; // Cambiar la vista predeterminada a "año"
 
 // Cambiar tema
 document.getElementById('tema').addEventListener('click', () => {
@@ -231,7 +231,14 @@ function renderChart() {
       responsive: true,
       scales: {
         x: { ticks: { autoSkip: true } },
-        y: { beginAtZero: true }
+        y: {
+          beginAtZero: false, // No comenzar desde cero
+          min: 80, // Límite inferior del eje Y
+          max: 110, // Límite superior del eje Y
+          ticks: {
+            stepSize: 5 // Incrementos en el eje Y
+          }
+        }
       }
     }
   });
@@ -304,3 +311,4 @@ document.getElementById('vista-selector').addEventListener('change', (e) => {
   vista = e.target.value; // Cambiar la vista seleccionada
   renderChart();
 });
+
