@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
     medicationTimeInput.value = now.toTimeString().split(":").slice(0, 2).join(":"); // Formato HH:MM
 
     // Lista inicial de tipos de medicación
-    const initialMedicationTypes = ["Paracetamol", "Ibuprofeno", "Aspirina"];
+    const initialMedicationTypes = ["Tensión", "Ibuprofeno", "Aspirina"];
     initialMedicationTypes.forEach((type) => {
         const option = document.createElement("option");
         option.value = type;
