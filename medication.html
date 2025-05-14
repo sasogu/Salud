@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Recordatorio de Medicación</title>
   <link rel="stylesheet" href="./css/style.css" />
 </head>
+
 <body>
   <header>
     <h1>Recordatorio de Medicación</h1>
@@ -17,13 +19,22 @@
   <main>
     <section class="medication-section">
       <h2>Añadir Medicación</h2>
+
+
       <form id="medication-form">
-        <label for="medication-name">Nombre de la Medicación:</label>
-        <input type="text" id="medication-name" placeholder="Ej. Ibuprofeno" required />
-        
+        <label for="medication-type">Tipo de Medicación:</label>
+        <select id="medication-type">
+          <!-- Opciones iniciales se añadirán dinámicamente -->
+        </select>
+        <input type="text" id="new-medication-type" placeholder="Nuevo tipo de medicación" />
+        <button type="button" id="add-type-button">Añadir Tipo</button>
+
+        <label for="medication-date">Fecha:</label>
+        <input type="date" id="medication-date" required />
+
         <label for="medication-time">Hora:</label>
         <input type="time" id="medication-time" required />
-        
+
         <button type="submit">Añadir</button>
       </form>
     </section>
@@ -42,4 +53,5 @@
 
   <script src="./js/medication.js"></script>
 </body>
+
 </html>
