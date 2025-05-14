@@ -30,21 +30,13 @@
 
 ## Uso
 
-1. Abre la aplicación en tu navegador.
+1. Abre la aplicación en tu navegador. https://sasogu.github.io/Salud/index.html
 2. Navega entre las diferentes secciones:
    - **Medicación**: Añade recordatorios para tomar medicación.
    - **Peso**: Registra tus medidas y visualiza gráficos.
    - **Tensión**: Lleva un registro de tus lecturas de tensión arterial.
    - **Sueño**: Registra tus patrones de sueño.
 3. Utiliza la funcionalidad de copia de seguridad para exportar o importar tus datos.
-
-## Capturas de Pantalla
-
-### Página Principal
-![Página Principal](./screenshots/index.png)
-
-### Recordatorio de Medicación
-![Recordatorio de Medicación](./screenshots/medication.png)
 
 ## Licencia
 
