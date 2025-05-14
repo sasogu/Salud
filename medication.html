@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recordatorio de Medicación</title>
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Recordatorio de Medicación</h1>
+    <nav>
+      <a href="index.html">Inicio</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="medication-section">
+      <h2>Añadir Medicación</h2>
+      <form id="medication-form">
+        <label for="medication-name">Nombre de la Medicación:</label>
+        <input type="text" id="medication-name" placeholder="Ej. Ibuprofeno" required />
+        
+        <label for="medication-time">Hora:</label>
+        <input type="time" id="medication-time" required />
+        
+        <button type="submit">Añadir</button>
+      </form>
+    </section>
+
+    <section class="medication-list-section">
+      <h2>Lista de Medicaciones</h2>
+      <ul id="medication-list">
+        <!-- Aquí se mostrarán las medicaciones -->
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Mi Salud</p>
+  </footer>
+
+  <script src="./js/medication.js"></script>
+</body>
+</html>

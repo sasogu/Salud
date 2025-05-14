@@ -258,3 +258,37 @@ button[type="submit"]:hover {
 .guardar-btn:hover {
   background-color: #45a049; /* Verde más oscuro al pasar el mouse */
 }
+
+/* ...existing code... */
+.medication-section {
+  margin-top: 20px;
+}
+
+.medication-section form {
+  margin-bottom: 10px;
+}
+
+.medication-section ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.medication-section li {
+  margin: 5px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.medication-section .mark-taken {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.medication-section .mark-taken:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
