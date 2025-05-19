@@ -16,8 +16,8 @@ document.getElementById("formulario").addEventListener("submit", function (e) {
   const pulso = parseInt(document.getElementById("pulso").value);
   const comentario = document.getElementById("comentario").value;
   const ahora = new Date();
-  const fecha = ahora.toLocaleDateString();
-  const hora = ahora.toLocaleTimeString();
+  const fecha = ahora.toLocaleDateString("es-ES"); // DD/MM/YYYY
+  const hora = ahora.toTimeString().slice(0,5); // HH:MM en 24h
 
   const resultado = interpretar(sis, dia);
 
@@ -107,7 +107,7 @@ function guardarDatos() {
 
     return {
       fecha: fechaFormateada,
-      hora: celdas[1].textContent,
+      hora: celdas[1].textContent.slice(0,5),
       sis: celdas[2].textContent,
       dia: celdas[3].textContent,
       resultado: celdas[4].textContent,
@@ -121,23 +121,27 @@ function guardarDatos() {
 function cargarDatos() {
   const datos = JSON.parse(localStorage.getItem("tensionDatos")) || [];
 
-  // Ordenar los datos por fecha y hora (más recientes primero)
+  // Ordenar por fecha y hora (más recientes primero)
   datos.sort((a, b) => {
-    const fechaHoraA = new Date(`${a.fecha}T${a.hora}`);
-    const fechaHoraB = new Date(`${b.fecha}T${b.hora}`);
-    return fechaHoraB - fechaHoraA; // Orden descendente
+    const normalizarHora = (h) => {
+      const partes = h.split(":");
+      return partes.length === 3
+        ? `${partes[0].padStart(2, "0")}:${partes[1].padStart(2, "0")}:${partes[2].padStart(2, "0")}`
+        : h;
+    };
+    const fechaA = new Date(`${a.fecha}T${normalizarHora(a.hora)}`);
+    const fechaB = new Date(`${b.fecha}T${normalizarHora(b.hora)}`);
+    return fechaB - fechaA;
   });
 
   // Limpiar la tabla antes de agregar los registros
   const tbody = document.querySelector("#tabla tbody");
   tbody.innerHTML = "";
 
-  // Agregar los registros ordenados a la tabla
+  // Agregar los registros ordenados a la tabla (más recientes primero)
   datos.forEach(({ fecha, hora, sis, dia, resultado, pulso, comentario }) => {
-    // Convertir la fecha al formato DD/MM/YYYY para mostrarla en la tabla
     const [anio, mes, diaNum] = fecha.split("-");
     const fechaFormateada = `${diaNum}/${mes}/${anio}`;
-
     agregarFila(fechaFormateada, hora, sis, dia, resultado, pulso, comentario);
   });
 }
@@ -146,7 +150,24 @@ function cargarDatos() {
 function renderChart() {
   const ctx = document.getElementById("tension-chart").getContext("2d");
 
-  const datos = JSON.parse(localStorage.getItem("tensionDatos")) || [];
+  let datos = JSON.parse(localStorage.getItem("tensionDatos")) || [];
+  // Ordenar igual que en la tabla (más recientes primero)
+  datos.sort((a, b) => {
+    const normalizarHora = (h) => {
+      const partes = h.split(":");
+      return partes.length === 3
+        ? `${partes[0].padStart(2, "0")}:${partes[1].padStart(2, "0")}:${partes[2].padStart(2, "0")}`
+        : h;
+    };
+    const fechaA = new Date(`${a.fecha}T${normalizarHora(a.hora)}`);
+    const fechaB = new Date(`${b.fecha}T${normalizarHora(b.hora)}`);
+    return fechaA - fechaB; // Orden inverso: más antiguo a más reciente
+  });
+
+  // Si quieres que la gráfica muestre de más antiguo (izquierda) a más reciente (derecha), usa el orden tal cual.
+  // Si quieres que la gráfica muestre de más reciente (izquierda) a más antiguo (derecha), usa datos.reverse() después de ordenar:
+  // datos.reverse();
+
   const labels = datos.map((d) => `${d.fecha} ${d.hora}`);
   const sistolica = datos.map((d) => parseInt(d.sis));
   const diastolica = datos.map((d) => parseInt(d.dia));
