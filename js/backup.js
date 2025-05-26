@@ -32,7 +32,7 @@ function exportBackup() {
 
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'backup.json';
+    a.download = 'salud-backup.json';
     a.click();
 
     URL.revokeObjectURL(url);
