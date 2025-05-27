@@ -1,7 +1,5 @@
 {
-  "id": "/",
-  "scope": "/",
-   "name": "Mi Salud",
+  "name": "Mi Salud",
   "display": "standalone",
   "start_url": "/Salud/index.html",
   "short_name": "Mi Salud",
