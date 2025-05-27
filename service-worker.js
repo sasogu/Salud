@@ -1,4 +1,4 @@
-const CACHE_NAME = 'peso-cache-v1.0.46'; // Cambia la versión aquí
+const CACHE_NAME = 'peso-cache-v1.0.47'; // Cambia la versión aquí
 
 self.addEventListener('install', e => {
   e.waitUntil(
@@ -13,8 +13,8 @@ self.addEventListener('install', e => {
         './js/peso.js',
         './js/tension.js',
         './js/sleep.js',
-        './assets/icon-192.png',
-        './assets/icon-512.png',
+        './assets/iconsalud-192.png',
+        './assets/iconsalud-512.png',
         './manifest.json'
         
       ]);
