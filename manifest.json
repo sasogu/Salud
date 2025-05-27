@@ -1,7 +1,9 @@
 {
   "name": "Mi Salud",
   "display": "standalone",
-  "start_url": "/Salud/index.html",
+  
+  "start_url": "/Salud/index.html?app=salud",
+  "scope": "/Salud/",
   "short_name": "Mi Salud",
   "theme_color": "#3f51b5",
   "description": "Aplicación sguimiento de salud",
