@@ -9,12 +9,13 @@ self.addEventListener('install', e => {
         './tension.html',
         './peso.html',
         './sleep.html',
+        './medication.html',         // <-- Añade esta línea
         './css/style.css',
         './js/peso.js',
         './js/tension.js',
         './js/sleep.js',
-        './assets/iconsalud-192.png',
-        './assets/iconsalud-512.png',
+        './assets/icon-192.png',
+        './assets/icon-512.png',
         './manifest.json'
         
       ]);
