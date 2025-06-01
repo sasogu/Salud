@@ -1,24 +1,23 @@
-const CACHE_NAME = 'peso-cache-v1.0.49'; // Cambia la versión aquí
+const CACHE_NAME = 'peso-cache-v1.0.50';
 
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
       return cache.addAll([
-        './',
-        './index.html',
-        './tension.html',
-        './peso.html',
-        './sleep.html',
-        './medication.html',         // <-- Añade esta línea
-        './css/style.css',
-        './js/peso.js',
-        './js/tension.js',
-        './js/sleep.js',
-        './js/medication.js',        // <-- Y esta línea
-        './assets/icon-192.png',
-        './assets/icon-512.png',
-        './manifest.json'
-        
+        '/Salud/',
+        '/Salud/index.html',
+        '/Salud/tension.html',
+        '/Salud/peso.html',
+        '/Salud/sleep.html',
+        '/Salud/medication.html',
+        '/Salud/css/style.css',
+        '/Salud/js/peso.js',
+        '/Salud/js/tension.js',
+        '/Salud/js/sleep.js',
+        '/Salud/js/medication.js',
+        '/Salud/assets/icon-192.png',
+        '/Salud/assets/icon-512.png',
+        '/Salud/manifest.json'
       ]);
     })
   );
