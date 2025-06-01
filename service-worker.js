@@ -14,6 +14,7 @@ self.addEventListener('install', e => {
         './js/peso.js',
         './js/tension.js',
         './js/sleep.js',
+        './js/medication.js',        // <-- Y esta línea
         './assets/icon-192.png',
         './assets/icon-512.png',
         './manifest.json'
