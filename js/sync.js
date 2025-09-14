@@ -27,6 +27,28 @@
     if (el) el.textContent = text;
   }
 
+  // PKCE helpers sin depender del SDK
+  function base64UrlEncode(bytes) {
+    let str = btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(bytes))));
+    return str.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+  }
+
+  function generateCodeVerifier() {
+    const allowed = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+    const len = 64; // entre 43 y 128
+    const rnd = new Uint8Array(len);
+    (window.crypto || window.msCrypto).getRandomValues(rnd);
+    let out = '';
+    for (let i = 0; i < len; i++) out += allowed[rnd[i] % allowed.length];
+    return out;
+  }
+
+  async function generateCodeChallenge(verifier) {
+    const data = new TextEncoder().encode(verifier);
+    const digest = await (window.crypto || window.msCrypto).subtle.digest('SHA-256', data);
+    return base64UrlEncode(digest);
+  }
+
   // Obtiene todos los datos locales en un único objeto
   function getAllData() {
     try {
@@ -127,39 +149,20 @@
 
     try {
       const auth = new Dropbox.DropboxAuth({ clientId: APP_KEY, fetch: window.fetch.bind(window) });
-      const hasPKCEGenerators = Dropbox.DropboxAuth &&
-        (Dropbox.DropboxAuth.generatePKCECodeVerifier || Dropbox.DropboxAuth.generateCodeVerifier);
-
-      let authUrl;
-      if (hasPKCEGenerators) {
-        // Intentar generar manualmente los códigos si la versión del SDK lo soporta
-        const genVerifier = Dropbox.DropboxAuth.generatePKCECodeVerifier || Dropbox.DropboxAuth.generateCodeVerifier;
-        const genChallenge = Dropbox.DropboxAuth.generatePKCECodeChallenge || Dropbox.DropboxAuth.generateCodeChallenge;
-        const codeVerifier = genVerifier();
-        const codeChallenge = await genChallenge(codeVerifier);
-        localStorage.setItem("dropboxCodeVerifier", codeVerifier);
-        authUrl = await auth.getAuthenticationUrl(
-          redirectUri,
-          undefined,
-          "code",
-          "offline",
-          undefined,
-          undefined,
-          true,
-          codeChallenge
-        );
-      } else {
-        // Deja que el SDK maneje PKCE internamente (algunas versiones lo hacen)
-        authUrl = await auth.getAuthenticationUrl(
-          redirectUri,
-          undefined,
-          "code",
-          "offline",
-          undefined,
-          undefined,
-          true
-        );
-      }
+      // Usar PKCE implementado localmente para máxima compatibilidad
+      const codeVerifier = generateCodeVerifier();
+      const codeChallenge = await generateCodeChallenge(codeVerifier);
+      localStorage.setItem("dropboxCodeVerifier", codeVerifier);
+      const authUrl = await auth.getAuthenticationUrl(
+        redirectUri,
+        undefined,
+        "code",
+        "offline",
+        undefined,
+        undefined,
+        true,
+        codeChallenge
+      );
       window.location.href = authUrl.toString();
     } catch (e) {
       console.error('Fallo generando URL de autenticación:', e);
@@ -186,13 +189,8 @@
     try {
       const codeVerifier = localStorage.getItem("dropboxCodeVerifier");
       const auth = new Dropbox.DropboxAuth({ clientId: APP_KEY, fetch: window.fetch.bind(window) });
-      let tokenRes;
-      if (codeVerifier) {
-        tokenRes = await auth.getAccessTokenFromCode(computeRedirectUri(), code, codeVerifier);
-      } else {
-        // Algunas versiones del SDK recuperan el code_verifier internamente si usePKCE=true
-        tokenRes = await auth.getAccessTokenFromCode(computeRedirectUri(), code);
-      }
+      if (!codeVerifier) throw new Error('Falta code_verifier para completar PKCE');
+      const tokenRes = await auth.getAccessTokenFromCode(computeRedirectUri(), code, codeVerifier);
       const access_token = tokenRes?.result?.access_token || tokenRes?.access_token;
       localStorage.removeItem("dropboxCodeVerifier");
       if (!access_token) throw new Error('No se recibió access_token');
