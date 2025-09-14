@@ -1,6 +1,7 @@
-const CACHE_NAME = 'peso-cache-v1.1.9';
+const CACHE_NAME = 'peso-cache-v1.2.0';
 
 self.addEventListener('install', e => {
+  self.skipWaiting();
   e.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
       return cache.addAll([
@@ -39,7 +40,7 @@ self.addEventListener('activate', e => {
           }
         })
       );
-    })
+    }).then(() => self.clients.claim())
   );
 });
 
