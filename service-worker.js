@@ -1,4 +1,4 @@
-const CACHE_NAME = 'peso-cache-v1.0.50';
+const CACHE_NAME = 'peso-cache-v1.1.1';
 
 self.addEventListener('install', e => {
   e.waitUntil(
@@ -15,6 +15,8 @@ self.addEventListener('install', e => {
         '/Salud/js/tension.js',
         '/Salud/js/sleep.js',
         '/Salud/js/medication.js',
+        '/Salud/js/backup.js',
+        '/Salud/js/sync.js',
         '/Salud/assets/icon-192.png',
         '/Salud/assets/icon-512.png',
         '/Salud/manifest.json'

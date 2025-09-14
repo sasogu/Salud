@@ -2,7 +2,7 @@
 function getBackupData() {
     const sleepData = JSON.parse(localStorage.getItem('sleepData')) || {};
     const weightData = JSON.parse(localStorage.getItem('weightData')) || {};
-    const tensionData = JSON.parse(localStorage.getItem('tensionData')) || {};
+    const tensionData = JSON.parse(localStorage.getItem('tensionDatos')) || {};
     const medicationData = JSON.parse(localStorage.getItem('medicationData')) || [];
 
     return {

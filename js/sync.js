@@ -1,0 +1,239 @@
+/*
+  Sincronización con Dropbox (cliente)
+  - Autenticación OAuth 2 con PKCE usando Dropbox JS SDK (en CDN)
+  - Sube/descarga un único JSON: "/salud-backup.json"
+  - Merge simple de datos: objetos por fecha (local gana) y arrays por clave compuesta
+  - Sincronización automática periódica si hay token válido
+*/
+
+(function () {
+  const APP_KEY = window.DROPBOX_APP_KEY || "";
+  const TOKEN_KEY = "dropboxToken";
+  const LAST_HASH_KEY = "dropboxLastSyncHash";
+  const FILE_PATH = "/salud-backup.json"; // En apps con carpeta restringida, cae dentro de la App Folder
+  const SYNC_INTERVAL_MS = 60_000; // 60s
+
+  let dbx = null;
+  let syncing = false;
+
+  // Utilidades
+  function byId(id) { return document.getElementById(id); }
+  function jsonStableStringify(obj) { return JSON.stringify(obj, Object.keys(obj).sort(), 2); }
+  function computeHash(obj) {
+    try { return btoa(unescape(encodeURIComponent(jsonStableStringify(obj)))); } catch (_) { return String(Date.now()); }
+  }
+  function setStatus(text) {
+    const el = byId("sync-status");
+    if (el) el.textContent = text;
+  }
+
+  // Obtiene todos los datos locales en un único objeto
+  function getAllData() {
+    try {
+      // Usa getBackupData() si existe (definida en js/backup.js),
+      // si no, compón manualmente para páginas donde no esté cargado backup.js
+      if (typeof getBackupData === "function") return getBackupData();
+    } catch (_) { /* noop */ }
+    const sleep = JSON.parse(localStorage.getItem("sleepData")) || {};
+    const weight = JSON.parse(localStorage.getItem("weightData")) || {};
+    const tension = JSON.parse(localStorage.getItem("tensionDatos")) || [];
+    const medication = JSON.parse(localStorage.getItem("medicationData")) || [];
+    return { sleep, weight, tension, medication };
+  }
+
+  function saveAllData(data) {
+    if (data.sleep && typeof data.sleep === "object") {
+      localStorage.setItem("sleepData", JSON.stringify(data.sleep));
+    }
+    if (data.weight && typeof data.weight === "object") {
+      localStorage.setItem("weightData", JSON.stringify(data.weight));
+    }
+    if (data.tension && Array.isArray(data.tension)) {
+      localStorage.setItem("tensionDatos", JSON.stringify(data.tension));
+    }
+    if (data.medication && Array.isArray(data.medication)) {
+      localStorage.setItem("medicationData", JSON.stringify(data.medication));
+    }
+  }
+
+  // Merge estrategias
+  function mergeObjectsByKey(localObj, remoteObj) {
+    return { ...remoteObj, ...localObj }; // local gana en conflictos
+  }
+
+  function mergeArrayUnique(localArr, remoteArr, keyFn) {
+    const map = new Map();
+    for (const item of remoteArr || []) map.set(keyFn(item), item);
+    for (const item of localArr || []) map.set(keyFn(item), item); // local gana
+    return Array.from(map.values());
+  }
+
+  function mergeBackup(localData, remoteData) {
+    if (!remoteData || typeof remoteData !== "object") return localData;
+    const result = { ...localData };
+    result.sleep = mergeObjectsByKey(localData.sleep || {}, remoteData.sleep || {});
+    result.weight = mergeObjectsByKey(localData.weight || {}, remoteData.weight || {});
+    result.tension = mergeArrayUnique(
+      localData.tension || [],
+      remoteData.tension || [],
+      (x) => `${x.fecha}|${x.hora}|${x.sis}|${x.dia}|${x.pulso}|${x.comentario}`
+    );
+    result.medication = mergeArrayUnique(
+      localData.medication || [],
+      remoteData.medication || [],
+      (x) => `${x.type}|${x.dose}|${x.date}|${x.time}|${x.taken ? 1 : 0}`
+    );
+    return result;
+  }
+
+  // Dropbox SDK helpers
+  function getDbx() {
+    if (!dbx) {
+      const token = localStorage.getItem(TOKEN_KEY);
+      if (!token) return null;
+      dbx = new Dropbox.Dropbox({ accessToken: token, fetch: window.fetch.bind(window) });
+    }
+    return dbx;
+  }
+
+  async function authenticate() {
+    if (!APP_KEY) {
+      alert("Falta configurar DROPBOX_APP_KEY en js/config.js");
+      return;
+    }
+    const redirectUri = window.location.origin + window.location.pathname; // la URL actual debe estar en la whitelist
+    const auth = new Dropbox.DropboxAuth({ clientId: APP_KEY, fetch: window.fetch.bind(window) });
+    const codeVerifier = Dropbox.DropboxAuth.generatePKCECodeVerifier();
+    const codeChallenge = await Dropbox.DropboxAuth.generatePKCECodeChallenge(codeVerifier);
+    localStorage.setItem("dropboxCodeVerifier", codeVerifier);
+    const authUrl = await auth.getAuthenticationUrl(
+      redirectUri,
+      undefined, // state
+      "code",
+      "offline",
+      undefined,
+      undefined,
+      true, // use PKCE
+      codeChallenge
+    );
+    window.location.href = authUrl.toString();
+  }
+
+  async function finishAuthIfNeeded() {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    if (!code) return;
+    try {
+      const codeVerifier = localStorage.getItem("dropboxCodeVerifier");
+      const auth = new Dropbox.DropboxAuth({ clientId: APP_KEY, fetch: window.fetch.bind(window) });
+      const { access_token } = await auth.getAccessTokenFromCode(window.location.origin + window.location.pathname, code, codeVerifier);
+      localStorage.removeItem("dropboxCodeVerifier");
+      localStorage.setItem(TOKEN_KEY, access_token);
+      dbx = new Dropbox.Dropbox({ accessToken: access_token, fetch: window.fetch.bind(window) });
+      // Limpia el querystring
+      window.history.replaceState({}, document.title, window.location.pathname);
+      setStatus("Conectado a Dropbox");
+    } catch (e) {
+      console.error("Error finalizando OAuth Dropbox:", e);
+      alert("No se pudo conectar con Dropbox. Revisa tu configuración.");
+    }
+  }
+
+  async function downloadRemoteBackup() {
+    const api = getDbx();
+    if (!api) return null;
+    try {
+      const res = await api.filesDownload({ path: FILE_PATH });
+      const blob = res.result.fileBlob || res.result.fileBinary || res.result;
+      const text = await blob.text();
+      return JSON.parse(text);
+    } catch (e) {
+      // 409 (path/not_found) es normal si aún no hay backup remoto
+      return null;
+    }
+  }
+
+  async function uploadBackup(data) {
+    const api = getDbx();
+    if (!api) return false;
+    const contents = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    await api.filesUpload({ path: FILE_PATH, contents, mode: { ".tag": "overwrite" } });
+    localStorage.setItem(LAST_HASH_KEY, computeHash(data));
+    return true;
+  }
+
+  async function syncOnce() {
+    if (syncing) return;
+    if (!getDbx()) return;
+    try {
+      syncing = true;
+      setStatus("Sincronizando…");
+
+      const localData = getAllData();
+      const remoteData = await downloadRemoteBackup();
+      const merged = mergeBackup(localData, remoteData);
+
+      // Si el merge cambió algo local, guarda y sube
+      const beforeHash = computeHash(localData);
+      const afterHash = computeHash(merged);
+      if (beforeHash !== afterHash) {
+        saveAllData(merged);
+      }
+
+      // Evita subir si no cambió vs. último sync
+      const lastHash = localStorage.getItem(LAST_HASH_KEY);
+      const currentHash = computeHash(getAllData());
+      if (currentHash !== lastHash) {
+        await uploadBackup(getAllData());
+      }
+      setStatus("Sincronizado");
+    } catch (e) {
+      console.error("Error de sincronización:", e);
+      setStatus("Error de sincronización");
+    } finally {
+      syncing = false;
+    }
+  }
+
+  function startAutoSync() {
+    // Primer intento inmediato
+    syncOnce();
+    // Intervalo periódico
+    setInterval(syncOnce, SYNC_INTERVAL_MS);
+  }
+
+  function disconnect() {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(LAST_HASH_KEY);
+    dbx = null;
+    setStatus("Desconectado");
+  }
+
+  // Exponer mínimamente en UI
+  function wireUi() {
+    const connectBtn = byId("dropbox-connect");
+    const disconnectBtn = byId("dropbox-disconnect");
+    if (connectBtn) connectBtn.addEventListener("click", authenticate);
+    if (disconnectBtn) disconnectBtn.addEventListener("click", disconnect);
+
+    // Mostrar estado segun token
+    if (localStorage.getItem(TOKEN_KEY)) {
+      setStatus("Conectado a Dropbox");
+    } else {
+      setStatus("Desconectado");
+    }
+  }
+
+  // Inicialización
+  window.addEventListener("DOMContentLoaded", async () => {
+    wireUi();
+    if (typeof Dropbox === "undefined") {
+      setStatus("SDK de Dropbox no cargado");
+      return;
+    }
+    await finishAuthIfNeeded();
+    if (localStorage.getItem(TOKEN_KEY)) {
+      startAutoSync();
+    }
+  });
+})();

@@ -16,13 +16,18 @@
   <a href="peso.html" class="boton">Control de Peso</a>
   <a href="sleep.html" class="boton">Sueño</a>
   <a href="medication.html" class="boton">Medicación</a>
-  <div><h4>Versión 1.0.50</h4></Versi></div>
+  <div><h4>Versión 1.1.0</h4></Versi></div>
   <section class="backup-section">
     <h2>Copia de Seguridad</h2>
     <br>
     <button id="backup-button">Exportar Copia de Seguridad</button>
     <input type="file" id="restore-file" style="display:none;">
     <button id="restore-button">Importar Copia de Seguridad</button>
+    <hr>
+    <h3>Sincronización con Dropbox</h3>
+    <p>Estado: <span id="sync-status">Desconectado</span></p>
+    <button id="dropbox-connect">Conectar con Dropbox</button>
+    <button id="dropbox-disconnect">Desconectar</button>
   </section>
   <footer>
     <p>&copy; 2025 Mi Salud. Este contenido está disponible bajo una 
@@ -30,5 +35,10 @@
     </p>
   </footer>
   <script src="./js/backup.js"></script>
+  <!-- Configurar tu App Key en js/config.js (copia de js/config.example.js) -->
+  <script src="./js/config.js"></script>
+  <!-- SDK de Dropbox desde CDN -->
+  <script src="https://unpkg.com/dropbox/dist/Dropbox-sdk.min.js"></script>
+  <script src="./js/sync.js"></script>
 </body>
 </html>
