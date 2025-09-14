@@ -1,4 +1,4 @@
-const CACHE_NAME = 'peso-cache-v1.2.0';
+const CACHE_NAME = 'peso-cache-v1.2.1';
 
 self.addEventListener('install', e => {
   self.skipWaiting();
@@ -18,8 +18,9 @@ self.addEventListener('install', e => {
         '/Salud/js/medication.js',
         '/Salud/js/backup.js',
         '/Salud/js/sync.js',
-        '/Salud/assets/icon-192.png',
-        '/Salud/assets/icon-512.png',
+        '/Salud/assets/iconsalud-192.png',
+        '/Salud/assets/iconsalud-512.png',
+        '/Salud/favicon.ico',
         '/Salud/manifest.json'
       ]);
     })
