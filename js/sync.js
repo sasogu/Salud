@@ -119,6 +119,8 @@
   }
 
   function computeRedirectUri() {
+    // Puedes forzarlo desde js/config.js con window.DROPBOX_REDIRECT_URI
+    if (window.DROPBOX_REDIRECT_URI) return window.DROPBOX_REDIRECT_URI;
     // URI exacta sin query ni hash; debe estar en la whitelist de Dropbox
     const href = window.location.href.split('#')[0].split('?')[0];
     return href;
@@ -166,7 +168,24 @@
       window.location.href = authUrl.toString();
     } catch (e) {
       console.error('Fallo generando URL de autenticación:', e);
-      alert('No se pudo iniciar la autenticación con Dropbox. Revisa la consola.');
+      // Fallback final: construir URL manualmente con PKCE
+      try {
+        const codeVerifier = localStorage.getItem("dropboxCodeVerifier") || generateCodeVerifier();
+        localStorage.setItem("dropboxCodeVerifier", codeVerifier);
+        const codeChallenge = await generateCodeChallenge(codeVerifier);
+        const params = new URLSearchParams({
+          client_id: APP_KEY,
+          response_type: 'code',
+          redirect_uri: redirectUri,
+          code_challenge: codeChallenge,
+          code_challenge_method: 'S256',
+          token_access_type: 'offline'
+        });
+        window.location.href = `https://www.dropbox.com/oauth2/authorize?${params.toString()}`;
+      } catch (e2) {
+        console.error('Fallback manual de OAuth también falló:', e2);
+        alert('No se pudo iniciar la autenticación con Dropbox. Revisa la consola.');
+      }
     }
   }
 
@@ -187,17 +206,50 @@
 
     if (!code) return;
     try {
+      const redirectUri = computeRedirectUri();
       const codeVerifier = localStorage.getItem("dropboxCodeVerifier");
       const auth = new Dropbox.DropboxAuth({ clientId: APP_KEY, fetch: window.fetch.bind(window) });
-      if (!codeVerifier) throw new Error('Falta code_verifier para completar PKCE');
-      const tokenRes = await auth.getAccessTokenFromCode(computeRedirectUri(), code, codeVerifier);
-      const access_token = tokenRes?.result?.access_token || tokenRes?.access_token;
+      let access_token;
+
+      if (codeVerifier) {
+        // Intentar con SDK (2 args o 3 args) y si falla, fetch manual
+        try {
+          if (typeof auth.setCodeVerifier === 'function') auth.setCodeVerifier(codeVerifier);
+          const tokenRes2 = await auth.getAccessTokenFromCode(redirectUri, code);
+          access_token = tokenRes2?.result?.access_token || tokenRes2?.access_token;
+        } catch (e1) {
+          try {
+            const tokenRes3 = await auth.getAccessTokenFromCode(redirectUri, code, codeVerifier);
+            access_token = tokenRes3?.result?.access_token || tokenRes3?.access_token;
+          } catch (e2) {
+            // Fallback manual HTTP
+            const resp = await fetch('https://api.dropboxapi.com/oauth2/token', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: new URLSearchParams({
+                code,
+                grant_type: 'authorization_code',
+                client_id: APP_KEY,
+                code_verifier: codeVerifier,
+                redirect_uri: redirectUri
+              })
+            });
+            if (!resp.ok) {
+              const txt = await resp.text();
+              throw new Error(`Token HTTP ${resp.status}: ${txt}`);
+            }
+            const json = await resp.json();
+            access_token = json.access_token;
+          }
+        }
+      }
+
       localStorage.removeItem("dropboxCodeVerifier");
       if (!access_token) throw new Error('No se recibió access_token');
       localStorage.setItem(TOKEN_KEY, access_token);
       dbx = new Dropbox.Dropbox({ accessToken: access_token, fetch: window.fetch.bind(window) });
       // Limpia el querystring
-      window.history.replaceState({}, document.title, computeRedirectUri());
+      window.history.replaceState({}, document.title, redirectUri);
       setStatus("Conectado a Dropbox");
     } catch (e) {
       console.error("Error finalizando OAuth Dropbox:", e);
