@@ -26,6 +26,8 @@
     const el = byId("sync-status");
     if (el) el.textContent = text;
   }
+  function asArray(x) { return Array.isArray(x) ? x : []; }
+  function asObject(x) { return (x && typeof x === 'object' && !Array.isArray(x)) ? x : {}; }
 
   // PKCE helpers sin depender del SDK
   function base64UrlEncode(bytes) {
@@ -85,24 +87,24 @@
 
   function mergeArrayUnique(localArr, remoteArr, keyFn) {
     const map = new Map();
-    for (const item of remoteArr || []) map.set(keyFn(item), item);
-    for (const item of localArr || []) map.set(keyFn(item), item); // local gana
+    for (const item of asArray(remoteArr)) map.set(keyFn(item), item);
+    for (const item of asArray(localArr)) map.set(keyFn(item), item); // local gana
     return Array.from(map.values());
   }
 
   function mergeBackup(localData, remoteData) {
     if (!remoteData || typeof remoteData !== "object") return localData;
     const result = { ...localData };
-    result.sleep = mergeObjectsByKey(localData.sleep || {}, remoteData.sleep || {});
-    result.weight = mergeObjectsByKey(localData.weight || {}, remoteData.weight || {});
+    result.sleep = mergeObjectsByKey(asObject(localData.sleep), asObject(remoteData.sleep));
+    result.weight = mergeObjectsByKey(asObject(localData.weight), asObject(remoteData.weight));
     result.tension = mergeArrayUnique(
-      localData.tension || [],
-      remoteData.tension || [],
+      asArray(localData.tension),
+      asArray(remoteData.tension),
       (x) => `${x.fecha}|${x.hora}|${x.sis}|${x.dia}|${x.pulso}|${x.comentario}`
     );
     result.medication = mergeArrayUnique(
-      localData.medication || [],
-      remoteData.medication || [],
+      asArray(localData.medication),
+      asArray(remoteData.medication),
       (x) => `${x.type}|${x.dose}|${x.date}|${x.time}|${x.taken ? 1 : 0}`
     );
     return result;
