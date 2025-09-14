@@ -3,4 +3,5 @@
 // Más info: https://www.dropbox.com/developers/apps
 
 window.DROPBOX_APP_KEY = "7ihoqwh2h5c21t2";
+window.DROPBOX_REDIRECT_URI = "https://sasogu.github.io/Salud/";
 

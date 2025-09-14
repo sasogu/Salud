@@ -149,44 +149,19 @@
       return;
     }
 
-    try {
-      const auth = new Dropbox.DropboxAuth({ clientId: APP_KEY, fetch: window.fetch.bind(window) });
-      // Usar PKCE implementado localmente para máxima compatibilidad
-      const codeVerifier = generateCodeVerifier();
-      const codeChallenge = await generateCodeChallenge(codeVerifier);
-      localStorage.setItem("dropboxCodeVerifier", codeVerifier);
-      const authUrl = await auth.getAuthenticationUrl(
-        redirectUri,
-        undefined,
-        "code",
-        "offline",
-        undefined,
-        undefined,
-        true,
-        codeChallenge
-      );
-      window.location.href = authUrl.toString();
-    } catch (e) {
-      console.error('Fallo generando URL de autenticación:', e);
-      // Fallback final: construir URL manualmente con PKCE
-      try {
-        const codeVerifier = localStorage.getItem("dropboxCodeVerifier") || generateCodeVerifier();
-        localStorage.setItem("dropboxCodeVerifier", codeVerifier);
-        const codeChallenge = await generateCodeChallenge(codeVerifier);
-        const params = new URLSearchParams({
-          client_id: APP_KEY,
-          response_type: 'code',
-          redirect_uri: redirectUri,
-          code_challenge: codeChallenge,
-          code_challenge_method: 'S256',
-          token_access_type: 'offline'
-        });
-        window.location.href = `https://www.dropbox.com/oauth2/authorize?${params.toString()}`;
-      } catch (e2) {
-        console.error('Fallback manual de OAuth también falló:', e2);
-        alert('No se pudo iniciar la autenticación con Dropbox. Revisa la consola.');
-      }
-    }
+    // Construye la URL de autorización manualmente (más estable entre versiones SDK)
+    const codeVerifier = generateCodeVerifier();
+    const codeChallenge = await generateCodeChallenge(codeVerifier);
+    localStorage.setItem("dropboxCodeVerifier", codeVerifier);
+    const params = new URLSearchParams({
+      client_id: APP_KEY,
+      response_type: 'code',
+      redirect_uri: redirectUri,
+      code_challenge: codeChallenge,
+      code_challenge_method: 'S256',
+      token_access_type: 'offline'
+    });
+    window.location.href = `https://www.dropbox.com/oauth2/authorize?${params.toString()}`;
   }
 
   async function finishAuthIfNeeded() {
