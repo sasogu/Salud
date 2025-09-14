@@ -153,13 +153,15 @@
     const codeVerifier = generateCodeVerifier();
     const codeChallenge = await generateCodeChallenge(codeVerifier);
     localStorage.setItem("dropboxCodeVerifier", codeVerifier);
+    const scopes = (window.DROPBOX_SCOPES || 'files.content.write files.content.read').trim();
     const params = new URLSearchParams({
       client_id: APP_KEY,
       response_type: 'code',
       redirect_uri: redirectUri,
       code_challenge: codeChallenge,
       code_challenge_method: 'S256',
-      token_access_type: 'offline'
+      token_access_type: 'offline',
+      scope: scopes
     });
     window.location.href = `https://www.dropbox.com/oauth2/authorize?${params.toString()}`;
   }
@@ -242,6 +244,7 @@
       return JSON.parse(text);
     } catch (e) {
       // 409 (path/not_found) es normal si aún no hay backup remoto
+      console.warn('downloadRemoteBackup error:', e);
       return null;
     }
   }
@@ -282,7 +285,8 @@
       setStatus("Sincronizado");
     } catch (e) {
       console.error("Error de sincronización:", e);
-      setStatus("Error de sincronización");
+      const msg = (e && (e.error || e.message || e.toString())) || 'desconocido';
+      setStatus(`Error de sincronización: ${String(msg).slice(0, 60)}`);
     } finally {
       syncing = false;
     }
