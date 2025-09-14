@@ -127,19 +127,39 @@
 
     try {
       const auth = new Dropbox.DropboxAuth({ clientId: APP_KEY, fetch: window.fetch.bind(window) });
-      const codeVerifier = Dropbox.DropboxAuth.generatePKCECodeVerifier();
-      const codeChallenge = await Dropbox.DropboxAuth.generatePKCECodeChallenge(codeVerifier);
-      localStorage.setItem("dropboxCodeVerifier", codeVerifier);
-      const authUrl = await auth.getAuthenticationUrl(
-        redirectUri,
-        undefined, // state
-        "code",
-        "offline",
-        undefined,
-        undefined,
-        true, // use PKCE
-        codeChallenge
-      );
+      const hasPKCEGenerators = Dropbox.DropboxAuth &&
+        (Dropbox.DropboxAuth.generatePKCECodeVerifier || Dropbox.DropboxAuth.generateCodeVerifier);
+
+      let authUrl;
+      if (hasPKCEGenerators) {
+        // Intentar generar manualmente los códigos si la versión del SDK lo soporta
+        const genVerifier = Dropbox.DropboxAuth.generatePKCECodeVerifier || Dropbox.DropboxAuth.generateCodeVerifier;
+        const genChallenge = Dropbox.DropboxAuth.generatePKCECodeChallenge || Dropbox.DropboxAuth.generateCodeChallenge;
+        const codeVerifier = genVerifier();
+        const codeChallenge = await genChallenge(codeVerifier);
+        localStorage.setItem("dropboxCodeVerifier", codeVerifier);
+        authUrl = await auth.getAuthenticationUrl(
+          redirectUri,
+          undefined,
+          "code",
+          "offline",
+          undefined,
+          undefined,
+          true,
+          codeChallenge
+        );
+      } else {
+        // Deja que el SDK maneje PKCE internamente (algunas versiones lo hacen)
+        authUrl = await auth.getAuthenticationUrl(
+          redirectUri,
+          undefined,
+          "code",
+          "offline",
+          undefined,
+          undefined,
+          true
+        );
+      }
       window.location.href = authUrl.toString();
     } catch (e) {
       console.error('Fallo generando URL de autenticación:', e);
@@ -166,7 +186,13 @@
     try {
       const codeVerifier = localStorage.getItem("dropboxCodeVerifier");
       const auth = new Dropbox.DropboxAuth({ clientId: APP_KEY, fetch: window.fetch.bind(window) });
-      const tokenRes = await auth.getAccessTokenFromCode(computeRedirectUri(), code, codeVerifier);
+      let tokenRes;
+      if (codeVerifier) {
+        tokenRes = await auth.getAccessTokenFromCode(computeRedirectUri(), code, codeVerifier);
+      } else {
+        // Algunas versiones del SDK recuperan el code_verifier internamente si usePKCE=true
+        tokenRes = await auth.getAccessTokenFromCode(computeRedirectUri(), code);
+      }
       const access_token = tokenRes?.result?.access_token || tokenRes?.access_token;
       localStorage.removeItem("dropboxCodeVerifier");
       if (!access_token) throw new Error('No se recibió access_token');
