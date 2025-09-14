@@ -96,46 +96,88 @@
     return dbx;
   }
 
+  function computeRedirectUri() {
+    // URI exacta sin query ni hash; debe estar en la whitelist de Dropbox
+    const href = window.location.href.split('#')[0].split('?')[0];
+    return href;
+  }
+
   async function authenticate() {
     if (!APP_KEY) {
       alert("Falta configurar DROPBOX_APP_KEY en js/config.js");
       return;
     }
-    const redirectUri = window.location.origin + window.location.pathname; // la URL actual debe estar en la whitelist
-    const auth = new Dropbox.DropboxAuth({ clientId: APP_KEY, fetch: window.fetch.bind(window) });
-    const codeVerifier = Dropbox.DropboxAuth.generatePKCECodeVerifier();
-    const codeChallenge = await Dropbox.DropboxAuth.generatePKCECodeChallenge(codeVerifier);
-    localStorage.setItem("dropboxCodeVerifier", codeVerifier);
-    const authUrl = await auth.getAuthenticationUrl(
-      redirectUri,
-      undefined, // state
-      "code",
-      "offline",
-      undefined,
-      undefined,
-      true, // use PKCE
-      codeChallenge
-    );
-    window.location.href = authUrl.toString();
+    if (!(location.protocol === 'http:' || location.protocol === 'https:')) {
+      alert("Dropbox OAuth requiere servir la app por http/https (no file://). Usa un servidor local o despliegue web.");
+      return;
+    }
+
+    const redirectUri = computeRedirectUri();
+
+    // Fallback sin SDK: flujo implícito
+    if (typeof Dropbox === 'undefined' || typeof Dropbox.DropboxAuth === 'undefined') {
+      const params = new URLSearchParams({
+        client_id: APP_KEY,
+        response_type: 'token',
+        redirect_uri: redirectUri
+      });
+      window.location.href = `https://www.dropbox.com/oauth2/authorize?${params.toString()}`;
+      return;
+    }
+
+    try {
+      const auth = new Dropbox.DropboxAuth({ clientId: APP_KEY, fetch: window.fetch.bind(window) });
+      const codeVerifier = Dropbox.DropboxAuth.generatePKCECodeVerifier();
+      const codeChallenge = await Dropbox.DropboxAuth.generatePKCECodeChallenge(codeVerifier);
+      localStorage.setItem("dropboxCodeVerifier", codeVerifier);
+      const authUrl = await auth.getAuthenticationUrl(
+        redirectUri,
+        undefined, // state
+        "code",
+        "offline",
+        undefined,
+        undefined,
+        true, // use PKCE
+        codeChallenge
+      );
+      window.location.href = authUrl.toString();
+    } catch (e) {
+      console.error('Fallo generando URL de autenticación:', e);
+      alert('No se pudo iniciar la autenticación con Dropbox. Revisa la consola.');
+    }
   }
 
   async function finishAuthIfNeeded() {
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
+    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+
+    // Soporte retorno del flujo implícito (sin SDK)
+    const implicitToken = hash.get('access_token');
+    if (implicitToken) {
+      localStorage.setItem(TOKEN_KEY, implicitToken);
+      window.history.replaceState({}, document.title, computeRedirectUri());
+      dbx = new (typeof Dropbox !== 'undefined' ? Dropbox.Dropbox : Object)({ accessToken: implicitToken, fetch: window.fetch?.bind(window) });
+      setStatus("Conectado a Dropbox");
+      return;
+    }
+
     if (!code) return;
     try {
       const codeVerifier = localStorage.getItem("dropboxCodeVerifier");
       const auth = new Dropbox.DropboxAuth({ clientId: APP_KEY, fetch: window.fetch.bind(window) });
-      const { access_token } = await auth.getAccessTokenFromCode(window.location.origin + window.location.pathname, code, codeVerifier);
+      const tokenRes = await auth.getAccessTokenFromCode(computeRedirectUri(), code, codeVerifier);
+      const access_token = tokenRes?.result?.access_token || tokenRes?.access_token;
       localStorage.removeItem("dropboxCodeVerifier");
+      if (!access_token) throw new Error('No se recibió access_token');
       localStorage.setItem(TOKEN_KEY, access_token);
       dbx = new Dropbox.Dropbox({ accessToken: access_token, fetch: window.fetch.bind(window) });
       // Limpia el querystring
-      window.history.replaceState({}, document.title, window.location.pathname);
+      window.history.replaceState({}, document.title, computeRedirectUri());
       setStatus("Conectado a Dropbox");
     } catch (e) {
       console.error("Error finalizando OAuth Dropbox:", e);
-      alert("No se pudo conectar con Dropbox. Revisa tu configuración.");
+      alert("No se pudo conectar con Dropbox. Verifica Redirect URI y App Key.");
     }
   }
 
@@ -228,8 +270,7 @@
   window.addEventListener("DOMContentLoaded", async () => {
     wireUi();
     if (typeof Dropbox === "undefined") {
-      setStatus("SDK de Dropbox no cargado");
-      return;
+      setStatus("SDK de Dropbox no cargado (usando flujo alternativo)");
     }
     await finishAuthIfNeeded();
     if (localStorage.getItem(TOKEN_KEY)) {
